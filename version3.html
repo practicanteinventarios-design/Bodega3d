@@ -1,0 +1,4216 @@
+<html lang="es">
+
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://jsuites.net/v4/jsuites.js"></script>
+  <link rel="stylesheet" href="https://jsuites.net/v4/jsuites.css" type="text/css" />
+  <script src="https://bossanova.uk/jspreadsheet/v4/jexcel.js"></script>
+  <link rel="stylesheet" href="https://bossanova.uk/jspreadsheet/v4/jexcel.css" type="text/css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VisualRack</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+
+      /* ─── COLORES PRINCIPALES ─── */
+      --bg: #07111f;
+      --bg-secondary: #0b1c33;
+
+      --surface: rgba(10, 25, 47, 0.88);
+      --surface-light: rgba(255, 255, 255, 0.04);
+
+      --primary: #d8ff3e;
+      --primary-soft: rgba(216, 255, 62, 0.15);
+
+      --border: rgba(216, 255, 62, 0.22);
+      --border-strong: rgba(216, 255, 62, 0.5);
+
+      --text: #ffffff;
+      --text-muted: #9fb3d1;
+
+      --shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+      --blur: blur(18px);
+
+      --radius: 18px;
+      --transition: 0.25s ease;
+
+    }
+
+    /* ───────────────────────────── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      color: white;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, #12345c 0%, transparent 30%),
+        radial-gradient(circle at bottom right, #1d3152 0%, transparent 35%),
+        linear-gradient(135deg, #050c16, #07111f, #08182e);
+      color: var(--text);
+    }
+
+    /* HEADER */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      z-index: 100;
+      background: rgba(5, 12, 22, 0.65);
+      backdrop-filter: var(--blur);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    header a {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    /* SIDEBAR */
+    .Sidebar {
+      position: fixed;
+      top: 0;
+      right: -280px;
+      width: 280px;
+      height: 100vh;
+      z-index: 999;
+      transition: 0.4s cubic-bezier(.77, 0, .18, 1);
+      background: rgba(6, 14, 25, 0.55);
+      backdrop-filter: blur(22px);
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .Sidebar.active {
+      right: 0;
+    }
+
+    .Sidebar_Info {
+      width: 100%;
+      height: 100%;
+      padding: 95px 24px 24px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* BLOQUES */
+    .Sidebar_Info>div {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .Sidebar_Info>div:hover {
+      transform: translateY(-2px);
+      border-color: var(--border);
+    }
+
+    /* TITULOS */
+    .Contenedor_Busqueda h5 {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* INPUTS */
+    .Sidebar_Info input,
+    .Sidebar_Info select {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 14px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+      color: var(--text);
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .Sidebar_Info input::placeholder {
+      color: #ffffff;
+    }
+
+    .Sidebar_Info input:focus,
+    .Sidebar_Info select:focus {
+      border-color: var(--border-strong);
+      background: rgb(4, 31, 82);
+      box-shadow: 0 0 0 4px rgba(216, 255, 62, 0.08);
+    }
+
+    /* BOTONES */
+
+    .btn {
+      width: 100%;
+      border: none;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #d8ff3e, #b5ff00);
+      color: #07111f;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: 0.25s ease;
+      box-shadow: 0 10px 25px rgba(181, 255, 0, 0.2);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(181, 255, 0, 0.35);
+    }
+
+    /* BTN DESPLAZAR */
+    .DesplazarBtn {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 120px;
+      border-radius: 18px 0 0 18px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 12, 22, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      color: var(--primary);
+      font-size: 22px;
+    }
+
+    .DesplazarBtn:hover {
+      width: 60px;
+    }
+
+    .DesplazarBtn .arrow-icon {
+      transition: 0.35s ease;
+    }
+
+    .Sidebar.active~.DesplazarBtn .arrow-icon {
+      transform: rotate(180deg);
+    }
+
+    /* PANTALLA INICIO */
+
+    .Pantalla_inicio {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(5, 12, 22, 0.72), rgba(5, 12, 22, 0.82));
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+    }
+
+    .Pantalla_inicio img {
+      width: 440px;
+      position: absolute;
+      left: 54%;
+      top: 38%;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 0 40px rgba(216, 255, 62, 0.12));
+    }
+
+    .Comenzamosbtn {
+      position: absolute;
+      left: 50%;
+      top: 58%;
+      width: auto;
+      padding: 16px 45px;
+      border-radius: 18px;
+      font-size: 13px;
+    }
+
+    /* BTN RACKS */
+
+    .Racks {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      width: 62px;
+      height: 62px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      z-index: 100;
+      background: rgba(5, 12, 22, 0.85);
+      color: var(--primary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      transition: 0.25s ease;
+    }
+
+    .Racks:hover {
+      transform: translateY(-4px) scale(1.05);
+      background: var(--primary);
+      color: #07111f;
+    }
+
+    /* MODAL */
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 40%;
+      transform: translate(-50%, -50%);
+      width: 72%;
+      height: 82vh;
+      display: none;
+      flex-direction: column;
+      z-index: 1200;
+      overflow: hidden;
+      border-radius: 28px;
+      background: rgba(5, 12, 22, 0.92);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.65);
+    }
+
+    /* TABLA */
+    .tablacontainer {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      margin-top: 70px;
+      margin-bottom: 50px;
+    }
+
+    .modal table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .modal table th {
+      position: sticky;
+      top: 0;
+      padding: 16px;
+      background: #0b1c33;
+      color: var(--primary);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      z-index: 2;
+    }
+
+    .modal table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #dfe9f8;
+    }
+
+    .modal table tr {
+      transition: 0.2s ease;
+    }
+
+    .modal table tr:hover {
+      background: rgba(216, 255, 62, 0.06);
+    }
+
+    /* CERRAR */
+    .icon_x {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: 0.25s ease;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .icon_x:hover {
+      transform: rotate(90deg) scale(1.08);
+      background: var(--primary);
+      color: #07111f;
+    }
+
+    /* SCROLL */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(216, 255, 62, 0.5);
+      border-radius: 20px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+
+
+    #listaSeriales {
+      width: 100%;
+      max-height: 220px;
+      overflow-y: auto;
+      margin-top: 8px;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .itemSerial {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .itemSerial:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .itemSerial input {
+      cursor: pointer;
+    }
+
+    .itemSerial span {
+      font-size: 12px;
+      color: white;
+
+      word-break: break-word;
+    }
+  </style>
+  <style>
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 1px;
+    }
+
+    #crosshair::before {
+      width: 2px;
+      height: 18px;
+      top: -9px;
+      left: -1px;
+    }
+
+    #crosshair::after {
+      width: 18px;
+      height: 2px;
+      top: -1px;
+      left: -9px;
+    }
+
+    #toggleModo {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1001;
+      background: rgba(10, 25, 47, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font: 13px/1 'Inter', sans-serif;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #toggleModo:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    @media (max-width: 900px) {
+      header {
+        padding: 0 16px;
+        height: 56px;
+      }
+
+      header a {
+        font-size: 17px;
+      }
+
+      .Sidebar {
+        width: 100%;
+        right: -100%;
+      }
+
+      .Sidebar_Info {
+        padding: 72px 14px 14px;
+        gap: 10px;
+      }
+
+      .Sidebar_Info>div {
+        padding: 12px;
+      }
+
+      .Pantalla_inicio img {
+        width: min(75vw, 280px);
+        top: 35%;
+      }
+
+      .Comenzamosbtn {
+        top: 52%;
+        padding: 14px 32px;
+        width: auto;
+      }
+
+      .modal {
+        width: 94%;
+        left: 50%;
+        height: 85vh;
+      }
+
+      .tablacontainer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .modal table th,
+      .modal table td {
+        padding: 10px 8px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      a {
+        color: white;
+      }
+
+      .DesplazarBtn {
+        width: 40px;
+        height: 70px;
+        font-size: 16px;
+      }
+
+      #toggleModo {
+        bottom: 12px;
+        right: 12px;
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+
+      .Racks {
+        width: 48px;
+        height: 48px;
+        bottom: 14px;
+        left: 14px;
+        font-size: 16px;
+      }
+
+      .icon_x {
+        width: 38px;
+        height: 38px;
+        top: 12px;
+        right: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+
+      html,
+      body {
+        touch-action: manipulation;
+      }
+
+      .Pantalla_inicio img {
+        width: min(70vw, 200px);
+        top: 32%;
+      }
+
+      .Comenzamosbtn {
+        top: 48%;
+        font-size: 12px;
+        padding: 12px 28px;
+      }
+
+      .Sidebar_Info input,
+      .Sidebar_Info select {
+        padding: 10px 10px;
+        font-size: 13px;
+        min-height: 44px;
+      }
+
+      .Sidebar_Info h5 {
+        font-size: 10px;
+      }
+
+      .btn {
+        padding: 12px 14px;
+        font-size: 12px;
+      }
+
+      #toggleModo {
+        bottom: 8px;
+        right: 8px;
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      .DesplazarBtn {
+        width: 34px;
+        height: 60px;
+        font-size: 13px;
+      }
+
+      .Racks {
+        width: 40px;
+        height: 40px;
+        bottom: 10px;
+        left: 10px;
+        font-size: 14px;
+      }
+
+      .modal table th,
+      .modal table td {
+        padding: 8px 6px;
+        font-size: 11px;
+      }
+    }
+
+    tfoot {
+      background: #00336600;
+      width: 100%;
+      height: 40px;
+      bottom: 10px;
+      position: absolute;
+      display: flex;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="crosshair"></div>
+  <header class="Header">
+    <a href="#">SCANVENTORY</a>
+    <button id="toggleModo">🔄 Orbita</button>
+  </header>
+  <div class="Sidebar">
+    <div class="Sidebar_Info">
+      <div class="Contenedor_Busqueda">
+        <h5>Ubicacion a consultar</h5>
+        <input id="input" name="UbicacionBuscador" placeholder="Ubicacion" type="text">
+      </div>
+      <div class="Contenedor_Busqueda">
+        <h5>Ubicaciones especiales</h5>
+        <select name="Categorias" id="Categorias_Art">
+          <option value="">Selecciona Ubicacion</option>
+        </select>
+      </div>
+      <div class="Contenedor_Busqueda">
+        <h5>Almacenamiento</h5>
+        <select name="CategoriasUbicaciones" id="Categorias_Ubic">
+          <option value="">Selecciona Almacenamiento</option>
+        </select>
+      </div>
+      <div class="Contenedor_Busqueda Serial_contenedor">
+        <h5>Serial</h5>
+        <input id="inputSerial" placeholder="Ingrese serial" type="text">
+        <div id="listaSeriales" style="display: none;"></div>
+      </div>
+      <div class="Contenedor_Busqueda Serial_contenedor">
+        <h5>Nombre</h5>
+        <input id="inputNombre" placeholder="Ingrese Nombre" type="text">
+        <div id="listaNombres"></div>
+      </div>
+      <div>
+        <button id="btnmodal" class="btn btnmodal">Ver resultados</button>
+      </div>
+    </div>
+  </div>
+  <button id="DesplazarBtn" class="DesplazarBtn btn"><span class="arrow-icon">⭠</span></button>
+  <div id="Pantalla_inicio" class="Pantalla_inicio">
+    <img src="https://i.ibb.co/kgvGYtR2/op9.png" alt="op9" border="0">
+    <button id="Comenzamosbtn" class="Comenzamosbtn btn">Comenzamos</button>
+  </div>
+  <div id="modal" class="modal">
+    <div id="icon_x" class="icon_x">X</div>
+    <div class="tablacontainer">
+      <table id="table" class="table">
+      </table>
+    </div>
+  </div>
+  <script type="importmap">
+    {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+  </script>
+
+  <script type="module">
+    function abrirSidebar() {
+      document.querySelector(".Sidebar").classList.add("active");
+    }
+    function cerrarSidebar() {
+      document.querySelector(".Sidebar").classList.remove("active");
+    }
+    // Desplazar slider
+    const btn = document.getElementById("DesplazarBtn");
+    const sidebar = document.querySelector(".Sidebar");
+
+    btn.addEventListener('click', function () {
+      if (sidebar.classList.contains("active")) {
+        cerrarSidebar();
+      } else {
+        abrirSidebar();
+      }
+    });
+
+    //Modal
+    const modal = document.getElementById('modal');
+    const btnmodal = document.getElementById('btnmodal');
+    const icon_x = document.getElementById('icon_x');
+
+    btnmodal.addEventListener('click', function () {
+      const estado = window.getComputedStyle(modal).display;
+      modal.style.display = estado === "none" ? "flex" : "none";
+    });
+
+    icon_x.addEventListener('click', function () {
+      modal.style.display = "none";
+    });
+
+    // Cerrar modal al hacer clic fuera de la tabla
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) modal.style.display = "none";
+    });
+
+    // Boton de inicio
+    const Comenzamosbtn = document.getElementById("Comenzamosbtn");
+    const Pantalla_inicio = document.getElementById("Pantalla_inicio");
+
+    Comenzamosbtn.addEventListener('click', function () {
+      Pantalla_inicio.style.display = "none";
+      if (modoFPS) renderer.domElement.requestPointerLock();
+    });
+
+
+
+    //Aqui comienza el codigo del three js
+
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+
+    // ESCENA
+    const escena = new THREE.Scene();
+    const colorAmbiente = 0x1a1817;
+    escena.background = new THREE.Color(colorAmbiente);
+    escena.fog = new THREE.Fog(colorAmbiente, 25, 65);
+
+    // CAMARA
+    const camara = new THREE.PerspectiveCamera(
+      62,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
+
+    // RENDER
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, 1.5)
+    );
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5;
+    document.body.appendChild(renderer.domElement);
+
+    // ─── POST-PROCESSING (BLOOM) ───
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(escena, camara));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.6, 0.4, 2.0
+    );
+    let bloomActivo = true;
+    let fpsContador = 0, fpsTiempo = 0, contadorPolvo = 0;
+    composer.addPass(bloomPass);
+
+    // ─── PARTÍCULAS DE POLVO (sin actualización por frame) ───
+    const dustCount = 250;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(dustCount * 3);
+    const dustBaseY = new Float32Array(dustCount);
+    const dustOff = new Float32Array(dustCount);
+    for (let i = 0; i < dustCount; i++) {
+      dustPos[i * 3] = (Math.random() - 0.5) * 80;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 8 + 3;
+      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 60 - 10;
+      dustBaseY[i] = dustPos[i * 3 + 1];
+      dustOff[i] = Math.random() * Math.PI * 2;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustMat = new THREE.PointsMaterial({
+      color: 0xffeedd, size: 0.03, transparent: true, opacity: 0.18,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const dustParticles = new THREE.Points(dustGeo, dustMat);
+    escena.add(dustParticles);
+
+    // ─── POSICIÓN INICIAL DE CADA MODO (edítalos aquí) ───
+    const POS_FPS = { x: 5, y: 1, z: -11, pitch: -0.1, yaw: 0 };
+    const POS_ORBITA = { x: 0, y: 0, z: 0, targetX: 40, targetY: 10, targetZ: -1 };
+
+    // ─── MODO (FPS / Orbita) ───
+    let modoFPS = false;
+
+    // ─── ORBIT CONTROLS (siempre listos, se habilitan/deshabilitan) ───
+    const orbitControls = new OrbitControls(camara, renderer.domElement);
+    orbitControls.enableDamping = true;
+    orbitControls.dampingFactor = 0.08;
+    orbitControls.enablePan = true;
+    orbitControls.panSpeed = 2.2;
+    orbitControls.rotateSpeed = 1.4;
+    orbitControls.zoomSpeed = 5;
+    orbitControls.screenSpacePanning = true;
+    orbitControls.target.set(POS_ORBITA.targetX, POS_ORBITA.targetY, POS_ORBITA.targetZ);
+    orbitControls.minDistance = 1;
+    orbitControls.maxDistance = 180;
+    orbitControls.maxPolarAngle = Math.PI * 0.49;
+    orbitControls.enabled = true;
+
+    // ─── FPS CONTROLS ───
+    const euler = new THREE.Euler(POS_FPS.pitch, POS_FPS.yaw, 0, 'YXZ');
+    camara.position.set(POS_FPS.x, POS_FPS.y, POS_FPS.z);
+    camara.quaternion.setFromEuler(euler);
+    const direccion = new THREE.Vector3();
+    const teclas = {};
+    let bloqueado = false, recienBloqueado = false, arrastrando = false, ultimoX = 0, ultimoY = 0;
+    let controlActivo = false;
+    const reloj = new THREE.Clock();
+    const crosshair = document.getElementById('crosshair');
+    crosshair.style.opacity = '0';
+
+    const estadoFPS = { pos: new THREE.Vector3(POS_FPS.x, POS_FPS.y, POS_FPS.z), euler: new THREE.Euler(POS_FPS.pitch, POS_FPS.yaw, 0, 'YXZ') };
+    const estadoOrbita = { pos: new THREE.Vector3(POS_ORBITA.x, POS_ORBITA.y, POS_ORBITA.z), target: new THREE.Vector3(POS_ORBITA.targetX, POS_ORBITA.targetY, POS_ORBITA.targetZ) };
+
+    function toggleModo() {
+      modoFPS = !modoFPS;
+      const btn = document.getElementById('toggleModo');
+      if (modoFPS) {
+        // Guardar estado de órbita
+        estadoOrbita.pos.copy(camara.position);
+        estadoOrbita.target.copy(orbitControls.target);
+        if (document.pointerLockElement) document.exitPointerLock();
+        orbitControls.enabled = false;
+        bloqueado = false; arrastrando = false; controlActivo = true;
+        camara.position.copy(estadoFPS.pos);
+        euler.copy(estadoFPS.euler);
+        camara.quaternion.setFromEuler(euler);
+        crosshair.style.opacity = '1';
+        btn.textContent = '🎮 FPS';
+      } else {
+        // Guardar estado de FPS
+        estadoFPS.pos.copy(camara.position);
+        estadoFPS.euler.copy(euler);
+        if (document.pointerLockElement) document.exitPointerLock();
+        orbitControls.enabled = true;
+        bloqueado = false; controlActivo = false;
+        crosshair.style.opacity = '0';
+        btn.textContent = '🔄 Orbita';
+        camara.position.copy(estadoOrbita.pos);
+        orbitControls.target.copy(estadoOrbita.target);
+      }
+    }
+
+    document.getElementById('toggleModo').addEventListener('click', toggleModo);
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'f' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        toggleModo();
+      }
+      if (modoFPS) teclas[e.key.toLowerCase()] = true;
+    });
+    document.addEventListener('keyup', (e) => {
+      if (modoFPS) teclas[e.key.toLowerCase()] = false;
+    });
+
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      if (modoFPS && !controlActivo) {
+        controlActivo = true;
+        crosshair.style.opacity = '1';
+        arrastrando = true; ultimoX = e.clientX; ultimoY = e.clientY;
+        try { renderer.domElement.requestPointerLock(); } catch (e) { }
+      }
+    });
+    document.addEventListener('mouseup', () => { arrastrando = false; });
+    document.addEventListener('pointerlockchange', () => {
+      if (!modoFPS) return;
+      bloqueado = document.pointerLockElement === renderer.domElement;
+      if (bloqueado) { recienBloqueado = true; arrastrando = false; controlActivo = true; crosshair.style.opacity = '1'; }
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!modoFPS) return;
+      let dx, dy;
+      if (bloqueado) { dx = e.movementX; dy = e.movementY; }
+      else if (arrastrando) { dx = e.clientX - ultimoX; dy = e.clientY - ultimoY; ultimoX = e.clientX; ultimoY = e.clientY; }
+      else { return; }
+      euler.setFromQuaternion(camara.quaternion);
+      euler.y -= dx * 0.002;
+      euler.x -= dy * 0.002;
+      euler.x = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, euler.x));
+      camara.quaternion.setFromEuler(euler);
+    });
+
+    // ─── CONTROLES TÁCTILES (MÓVIL) ───
+    let joystickActivo = false, joystickCentro = { x: 0, y: 0 }, toqueInicio = { x: 0, y: 0, tiempo: 0 };
+    const umbralJoystick = 20;
+
+    function manejarJoystick(x, y) {
+      const dx = x - joystickCentro.x;
+      const dy = y - joystickCentro.y;
+      teclas['w'] = dy < -umbralJoystick;
+      teclas['s'] = dy > umbralJoystick;
+      teclas['a'] = dx < -umbralJoystick;
+      teclas['d'] = dx > umbralJoystick;
+    }
+
+    const moviendo =
+      teclas['w'] ||
+      teclas['a'] ||
+      teclas['s'] ||
+      teclas['d'];
+
+    bloomPass.enabled = !moviendo;
+
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (!modoFPS || !controlActivo) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      toqueInicio = { x: touch.clientX, y: touch.clientY, tiempo: Date.now() };
+      const medio = window.innerWidth / 2;
+      if (touch.clientX < medio) {
+        joystickActivo = true;
+        joystickCentro = { x: touch.clientX, y: touch.clientY };
+      } else {
+        arrastrando = true;
+        ultimoX = touch.clientX;
+        ultimoY = touch.clientY;
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (!modoFPS) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (joystickActivo) {
+        manejarJoystick(touch.clientX, touch.clientY);
+      } else if (arrastrando) {
+        const dx = touch.clientX - ultimoX;
+        const dy = touch.clientY - ultimoY;
+        euler.setFromQuaternion(camara.quaternion);
+        euler.y -= dx * 0.005;
+        euler.x -= dy * 0.005;
+        euler.x = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, euler.x));
+        camara.quaternion.setFromEuler(euler);
+        ultimoX = touch.clientX;
+        ultimoY = touch.clientY;
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchend', (e) => {
+      if (joystickActivo) {
+        joystickActivo = false;
+        teclas['w'] = teclas['s'] = teclas['a'] = teclas['d'] = false;
+      } else if (arrastrando) {
+        const dist = Math.hypot(e.changedTouches[0].clientX - toqueInicio.x, e.changedTouches[0].clientY - toqueInicio.y);
+        if (dist < 15 && Date.now() - toqueInicio.tiempo < 300) seleccionarCentro();
+      }
+      arrastrando = false;
+    });
+
+    // TEXTURAS
+    const textureLoader = new THREE.TextureLoader();
+
+    function createConcreteTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#888980";
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 2400; i++) {
+        const gray = 90 + Math.floor(Math.random() * 70);
+        const alpha = 0.03 + Math.random() * 0.05;
+        ctx.fillStyle = `rgba(${gray}, ${gray}, ${gray}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          Math.random() * 512,
+          Math.random() * 512,
+          Math.random() * 2.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= 512; i += 64) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 512);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(512, i);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(8, 8);
+      return texture;
+    }
+
+    const concreteTexture = createConcreteTexture();
+
+    // LUCES
+    const luzHemisferica = new THREE.HemisphereLight(0xd4e4f7, 0x94a3b8, 1.9);
+    escena.add(luzHemisferica);
+
+    const luzAmbiental = new THREE.AmbientLight(0xf7f0e8, 0.3);
+    escena.add(luzAmbiental);
+
+    const luzDireccional = new THREE.DirectionalLight(0xffeedd, 2.2);
+    luzDireccional.position.set(12, 20, 8);
+    luzDireccional.castShadow = true;
+
+    luzDireccional.shadow.mapSize.set(2048, 2048);
+    luzDireccional.shadow.camera.left = -25;
+    luzDireccional.shadow.camera.right = 25;
+    luzDireccional.shadow.camera.top = 25;
+    luzDireccional.shadow.camera.bottom = -25;
+    luzDireccional.shadow.camera.near = 1;
+    luzDireccional.shadow.camera.far = 50;
+    luzDireccional.shadow.bias = -0.0003;
+    luzDireccional.shadow.normalBias = 0.05;
+    escena.add(luzDireccional);
+
+    const luzRelleno = new THREE.DirectionalLight(0xaaccff, 0.6);
+    luzRelleno.position.set(-15, 10, 20);
+    escena.add(luzRelleno);
+
+    const luzAcento = new THREE.DirectionalLight(0xffcc88, 0.5);
+    luzAcento.position.set(8, 5, -20);
+    escena.add(luzAcento);
+
+    const luzContraste = new THREE.DirectionalLight(0x8899bb, 0.35);
+    luzContraste.position.set(-20, 8, -15);
+    escena.add(luzContraste);
+
+    [
+      [-14, 16, -4],
+      [0, 16, -4],
+      [14, 16, -4],
+      [0, 16, 10],
+    ].forEach(([x, y, z]) => {
+      const target = new THREE.Object3D();
+      target.position.set(x, 0, z);
+      escena.add(target);
+      const luminaria = new THREE.SpotLight(0xffeedd, 60, 35, Math.PI / 3.5, 0.6, 1.2);
+      luminaria.position.set(x, y, z);
+      luminaria.target = target;
+      escena.add(luminaria);
+      // Cuerpo de la luminaria (emissivo)
+      const cuerpo = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.1, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x332211, emissive: 0xffaa44, emissiveIntensity: 0.8, roughness: 0.6 })
+      );
+      cuerpo.position.set(x, y, z);
+      escena.add(cuerpo);
+      const tubo = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.2, 0.3, 8),
+        new THREE.MeshStandardMaterial({ color: 0x555555, emissive: 0xffdd88, emissiveIntensity: 0.3, roughness: 0.4 })
+      );
+      tubo.position.set(x, y - 0.2, z);
+      escena.add(tubo);
+    });
+
+    // SUELO EXTERIOR
+    const pisoExterior = new THREE.Mesh(
+      new THREE.PlaneGeometry(50, 30),
+      new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0x93968f,
+        roughness: 1,
+        metalness: 0.02,
+      }),
+    );
+    pisoExterior.rotation.x = -Math.PI / 2;
+    pisoExterior.position.y = -2.05;
+    pisoExterior.position.x = 16;
+    pisoExterior.position.z = -12;
+    pisoExterior.receiveShadow = true;
+    escena.add(pisoExterior);
+
+    // GRID
+    const grid = new THREE.GridHelper(130, 130, 0x94a2a2, 0x4f5b60);
+    grid.position.y = 0.1; //-1.96  valor fijo
+    grid.material.transparent = true;
+    grid.material.opacity = 0.18;
+    escena.add(grid);
+
+    // Material para paredes/fondo
+    const texturaLadrillo = textureLoader.load('https://threejs.org/examples/textures/brick_diffuse.jpg');
+    texturaLadrillo.wrapS = texturaLadrillo.wrapT = THREE.RepeatWrapping;
+    texturaLadrillo.repeat.set(8, 4);
+    const matBlancoFondo = new THREE.MeshStandardMaterial({
+      map: texturaLadrillo,
+      color: 0xb05a28,
+      roughness: 0.4,
+      metalness: 0.0,
+    });
+
+    /////////////////////////////////////////////////////////////
+    ////////               Escaleras                          ///
+    /////////////////////////////////////////////////////////////
+
+    function crearEscaleraMetalica(x, z, alturaObjetivo, anchoEscalon = 1.15, roty) {
+      const grupoEscalera = new THREE.Group();
+      const contrahuella = 0.17; // Altura de cada escalón
+      const huella = 0.27;       // Profundidad de cada escalón
+      const grosorEscalon = 0.04;
+      const numEscalones = Math.ceil(alturaObjetivo / contrahuella);
+
+      // Material Metálico (Gris industrial)
+      const matMetal = new THREE.MeshStandardMaterial({
+        color: 0x555555,
+        metalness: 0.8,
+        roughness: 0.2
+      });
+
+      for (let i = 0; i < 15; i++) {
+        // 1. Crear el escalón (la tabla horizontal)
+        const geoEscalon = new THREE.BoxGeometry(anchoEscalon, grosorEscalon, huella);
+        const escalon = new THREE.Mesh(geoEscalon, matMetal);
+        const posY = i * contrahuella;
+        const posZ = i * huella;
+        escalon.position.set(0, (i * contrahuella), (i * huella));// Posicionamiento en diagonal (escalonado)
+
+        grupoEscalera.add(escalon);
+
+        if (i % 2 === 0 || i === numEscalones - 1) {
+          const geoPoste = new THREE.BoxGeometry(0.04, 0.8, 0.04);
+          const poste = new THREE.Mesh(geoPoste, matMetal);
+
+          // Los ubicamos en los extremos del escalón (derecha e izquierda)
+          poste.position.set(-anchoEscalon / 2 - 0.05, posY + 0.4, posZ);
+          grupoEscalera.add(poste);
+        }
+      }
+
+      // . Pasamanos (Simple)
+      const geoPasamanos = new THREE.BoxGeometry(0.03, 0.08, numEscalones * huella * 1.2);
+      const pasamanosDer = new THREE.Mesh(geoPasamanos, matMetal);
+
+      pasamanosDer.position.set(anchoEscalon - 1.5, alturaObjetivo / 2.2, (numEscalones * huella) / 2.2);
+      pasamanosDer.rotation.x = Math.PI / 1.22; // Inclinación según la escalera
+
+      grupoEscalera.add(pasamanosDer);
+
+      //Pasamanos superior
+      const geoPasamanosSup = new THREE.BoxGeometry(0.03, 0.08, numEscalones * huella * 1.2);
+      const PasamanosSup = new THREE.Mesh(geoPasamanosSup, matMetal);
+
+      PasamanosSup.position.set(anchoEscalon - 1.5, alturaObjetivo / 1.3, (numEscalones * huella) / 2.2);
+      PasamanosSup.rotation.x = Math.PI / 1.22; // Inclinación según la escalera
+
+      grupoEscalera.add(PasamanosSup);
+
+      grupoEscalera.position.set(x, 0.33, z);
+      grupoEscalera.rotation.y = roty;
+      setShadows(grupoEscalera);
+      escena.add(grupoEscalera);
+      return grupoEscalera;
+    }
+    crearEscaleraMetalica(26, -15.5, 2.5, 1, 0.5);
+
+    //BaseEscaleras
+    function CrearBaseEscaleras1() {
+      const formaTotal = new THREE.Shape();
+
+      formaTotal.moveTo(1, 1);
+      formaTotal.lineTo(1.1, 1.8)
+      formaTotal.lineTo(2, 2.3)
+      formaTotal.lineTo(2, 1)
+      formaTotal.lineTo(1, 1)
+
+      const settings = {
+        depth: 0.05, // 40cm de grosor de concreto
+        bevelEnabled: false
+      };
+
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, settings);
+      const matMetal = new THREE.MeshStandardMaterial({
+        color: 0x555555,
+        metalness: 0.8,
+        roughness: 0.2
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matMetal);
+
+      escena.add(mallaPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      mallaPiso.position.set(26.37, 2.9, -10);
+      window.PisoGeneral = mallaPiso; // Disponible para el select
+    }
+    CrearBaseEscaleras1();
+
+    //Base Escaleras2
+    function CrearBaseEscaleras2() {
+      const formaTotal = new THREE.Shape();
+
+      // 1. Punto de inicio
+      formaTotal.moveTo(1, 1);
+      // 2. Punto 2
+      formaTotal.lineTo(1, 1.4)
+      // 3. Punto 3
+      formaTotal.lineTo(2, 1.4)
+      // 4 Punto 4
+      formaTotal.lineTo(2, 1)
+      // 5. Punto 5
+      formaTotal.lineTo(1, 1)
+
+      const settings = {
+        depth: 0.05, // 50cm de grosor de concreto
+        bevelEnabled: false
+      };
+
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, settings);
+      const matMetal = new THREE.MeshStandardMaterial({
+        color: 0x555555,
+        metalness: 0.8,
+        roughness: 0.2
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matMetal);
+
+      escena.add(mallaPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      mallaPiso.position.set(26.37, 3.15, -9.6);
+      window.PisoGeneral = mallaPiso; // Disponible para el select
+    }
+    CrearBaseEscaleras2();
+
+    //Soportes superiores
+    const matMetalSoporte = new THREE.MeshStandardMaterial({
+      color: 0x555555,
+      metalness: 0.8,
+      roughness: 0.2
+    });
+    const geoSoportePostal = new THREE.BoxGeometry(0.05, 0.9, 0.05);
+
+    ///Renderiza múltiples soportes en un solo proceso/
+
+    function renderizadoSoportesMasivos(puntos) {
+      const cantidad = puntos.length;
+      // Creamos una malla instanciada: (geometría, material, cantidad)
+      const instancedMesh = new THREE.InstancedMesh(geoSoportePostal, matMetalSoporte, cantidad);
+      const dummy = new THREE.Object3D(); // Objeto auxiliar para calcular matrices
+
+      puntos.forEach((p, i) => {
+        // Configuramos la posición del soporte temporal
+        dummy.position.set(p.x, p.y, p.z);
+        dummy.rotation.y = p.roty || 0;
+        dummy.updateMatrix(); // Genera la matriz de transformación
+
+        // Asignamos la matriz a la instancia i
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+      });
+
+      instancedMesh.instanceMatrix.needsUpdate = true;
+      instancedMesh.castShadow = true;
+      instancedMesh.receiveShadow = true;
+
+      escena.add(instancedMesh);
+      return instancedMesh;
+    }
+
+    // Lista de tus coordenadas actuales
+    const misSoportes = [
+      { x: 27.3, y: 3.4, z: -11 },
+      { x: 27.3, y: 3.64, z: -10.6 },
+      { x: 28.3, y: 3.64, z: -10.6 },
+      { x: 28.3, y: 3.64, z: -9.6 },
+      { x: 28.3, y: 3.64, z: -8.5 }
+    ];
+
+    renderizadoSoportesMasivos(misSoportes);
+
+    function SoportesMasivosHoriz(puntos) {
+      // La geometría base es de tamaño 1 para que la escala sea exacta
+      const geoBase = new THREE.BoxGeometry(0.05, 1, 0.05);
+      const cantidad = puntos.length;
+
+      const instancedMesh = new THREE.InstancedMesh(geoBase, matMetalSoporte, cantidad);
+      const dummy = new THREE.Object3D();
+
+      puntos.forEach((p, i) => {
+        // 1. Posición
+        dummy.position.set(p.x, p.y, p.z);
+
+        // 2. Rotación (Acostados)
+        dummy.rotation.z = Math.PI / 2;
+        dummy.rotation.y = p.roty || 0;
+
+        // 3. ESCALA (Aquí es donde aplicas el Largo individual)
+        // Como la geometría mide 1, si p.Largo es 0.9, se escalará a 0.9m
+        const largoIndividual = p.Largo || 0.9;
+        dummy.scale.set(1, largoIndividual, 1);
+
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+      });
+
+      instancedMesh.instanceMatrix.needsUpdate = true;
+      instancedMesh.castShadow = true;
+      instancedMesh.receiveShadow = true;
+
+      escena.add(instancedMesh);
+      return instancedMesh;
+    }
+
+    // Lista de coordenadas con largos y rotaciones distintas
+    const misSoportesHoriz = [
+      { x: 27.8, y: 3.6, z: -10.6, roty: 0, Largo: 0.9 },
+      { x: 27.8, y: 4.06, z: -10.6, roty: 0, Largo: 0.9 },
+      { x: 28.3, y: 4.06, z: -9.5, roty: Math.PI / 2, Largo: 2.2 },
+      { x: 28.3, y: 3.56, z: -9.5, roty: Math.PI / 2, Largo: 2.2 },
+      { x: 27.3, y: 3.83, z: -10.8, roty: Math.PI / 2, Largo: 0.45 },
+      { x: 27.3, y: 3.5, z: -10.8, roty: Math.PI / 2, Largo: 0.45 },
+      { x: 27.3, y: 3.59, z: -11.42, roty: Math.PI / 2, Largo: 0.85 }
+    ];
+    SoportesMasivosHoriz(misSoportesHoriz);
+
+    //// rega marco metalica////////////
+
+    // --- Función para crear un panel de reja ---
+    function crearPanelReja(x, y, z, ANCHO_REJA, roty = 0) {
+      const panel = new THREE.Group();
+      const ALTO_REJA = 2.5;
+      const GROSOR_MARCO = 0.05;
+
+      const matMetal = new THREE.MeshStandardMaterial({
+        color: 0xcccccc,
+        metalness: 0.8,
+        roughness: 0.2,
+      });
+
+      // 1. MARCO (Cajas reales)
+      const marcoGeoVert = new THREE.BoxGeometry(GROSOR_MARCO, ALTO_REJA, GROSOR_MARCO);
+      const marcoGeoHoriz = new THREE.BoxGeometry(ANCHO_REJA, GROSOR_MARCO, GROSOR_MARCO);
+
+      const mIzq = new THREE.Mesh(marcoGeoVert, matMetal);
+      mIzq.position.set(-ANCHO_REJA / 2, ALTO_REJA / 2, 0);
+
+      const mDer = mIzq.clone();
+      mDer.position.x = ANCHO_REJA / 2;
+
+      const mSup = new THREE.Mesh(marcoGeoHoriz, matMetal);
+      mSup.position.set(0, ALTO_REJA, 0);
+
+      const mInf = mSup.clone();
+      mInf.position.y = 0;
+
+      panel.add(mIzq, mDer, mSup, mInf);
+
+      // 2. REJILLA (Malla eficiente)
+      // Creamos un plano y le aplicamos una repetición de patrón de rejilla
+      const loader = new THREE.TextureLoader();
+      // Puedes usar una imagen de rejilla o crear una cuadrícula simple con Canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#888888';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, 64, 64);
+
+      const texReja = new THREE.CanvasTexture(canvas);
+      texReja.wrapS = texReja.wrapT = THREE.RepeatWrapping;
+      texReja.repeat.set(ANCHO_REJA * 10, ALTO_REJA * 10); // Densidad de la malla
+
+      const matReja = new THREE.MeshStandardMaterial({
+        map: texReja,
+        transparent: true,
+        side: THREE.DoubleSide,
+        metalness: 0.5
+      });
+
+      const mallaInterior = new THREE.Mesh(new THREE.PlaneGeometry(ANCHO_REJA, ALTO_REJA), matReja);
+      mallaInterior.position.set(0, ALTO_REJA / 2, 0);
+      panel.add(mallaInterior);
+
+      // 3. POSICIONAMIENTO FINAL
+      panel.position.set(x, y, z);
+      panel.rotation.y = roty;
+
+      escena.add(panel);
+      return panel;
+    }
+
+    // Uso:
+    crearPanelReja(24.18, 0.2, -16.4, 4, 0);
+    crearPanelReja(22.2, 0.2, -15.3, 2.1, Math.PI / 2);
+    crearPanelReja(19.68, 0.2, -14.26, 5, 0);
+    crearPanelReja(13.25, 0.2, -15.5, 3, 0);
+    crearPanelReja(17.12, 0.2, -14.9, 1.3, Math.PI / 2);
+
+
+    // //////                       Pisos                       /
+    function crearLoteCompleto() {
+      const formaTotal = new THREE.Shape();
+
+      // 1. Punto de inicio (Ahora en 0,0)
+      formaTotal.moveTo(0, 0);
+      // 2. Línea inferior
+      formaTotal.lineTo(34.99, 0);
+      // 3. El tramo daigonal
+      formaTotal.lineTo(21.93, 24.00);
+      // 4. Linea superior
+      formaTotal.lineTo(12, 24.00);
+      // 5. Linea superior diagonal
+      formaTotal.lineTo(12, 16);
+      // 6. Linea De alfrente
+      formaTotal.lineTo(0, 16);
+      // 7. Cierre
+      formaTotal.lineTo(0, 0);
+
+      const settings = { depth: 0.2, bevelEnabled: false };
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, settings);
+      const matPiso = new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0x777777,
+        roughness: 0.9
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      mallaPiso.position.set(0, 0, 0); // Posición absoluta en la escena
+      mallaPiso.receiveShadow = true;
+
+      escena.add(mallaPiso);
+      window.PisoGeneral = mallaPiso;
+    }
+
+    crearLoteCompleto();
+
+    // -----CONSTRUCCION BASE ZONA DE ANALISTAS Triangulo------//  
+    function CrearBaseAnalistas() {
+      const formaTotal = new THREE.Shape();
+      formaTotal.moveTo(0, 0);
+      formaTotal.lineTo(6.45, 0);
+      formaTotal.lineTo(0, 13);
+      formaTotal.lineTo(0, 0);
+
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, { depth: 0.2, bevelEnabled: false });
+      const matPiso = new THREE.MeshStandardMaterial({ map: concreteTexture, color: 0x777777 });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      // Ajustamos X de 56.37 a 28.37
+      mallaPiso.position.set(28.37, 3, 0);
+      escena.add(mallaPiso);
+    }
+    CrearBaseAnalistas();
+
+    // -----CONSTRUCCION TECHO ZONA DE ANALISTAS Triangulo------//  
+    function CrearTechoAnalistas() {
+      const formaTotal = new THREE.Shape();
+      formaTotal.moveTo(0, 0);
+      formaTotal.lineTo(0, 8.5);
+      formaTotal.lineTo(2, 8.5);
+      formaTotal.lineTo(7, 0);
+      formaTotal.lineTo(0, 0);
+
+      const geoTecho = new THREE.ExtrudeGeometry(formaTotal, { depth: 0.025, bevelEnabled: false });
+      const matTecho = new THREE.MeshStandardMaterial({ map: concreteTexture, color: 0x777777 });
+
+      const mallaTecho = new THREE.Mesh(geoTecho, matTecho);
+      mallaTecho.rotation.x = -Math.PI / 2;
+      // Ajustamos X de 56.4 a 28.4
+      mallaTecho.position.set(28.4, 6.4, 0);
+      escena.add(mallaTecho);
+    }
+    CrearTechoAnalistas();
+
+
+    //----------- Crear zona de piso1------------///////
+    let meshVidrios;// GLOBAL
+
+    // FUNCION PISO 1
+    function piso1() {
+      const formaTotal = new THREE.Shape();
+
+      formaTotal.moveTo(0, 0);
+      formaTotal.lineTo(2.3, 0);
+      formaTotal.lineTo(0, 4.8);
+      formaTotal.lineTo(0, 0);
+
+      // PISO
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, { depth: 0.2, bevelEnabled: false });
+      const matPiso = new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0x777777
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      mallaPiso.position.set(28.2, 0.2, -8.5);
+
+      escena.add(mallaPiso);
+
+      // MESH VIDRIOS ENCIMA
+      const geoVidrios = new THREE.ExtrudeGeometry(formaTotal, { depth: 2.7, bevelEnabled: false });
+      const matVidrios = new THREE.MeshPhysicalMaterial({
+        color: 0x00d9ff,
+        transparent: true,
+        opacity: 0.25,
+        transmission: 1,
+        roughness: 0,
+        metalness: 0,
+        clearcoat: 1,
+        side: THREE.DoubleSide
+      });
+
+      // MESH GLOBAL
+      meshVidrios = new THREE.Mesh(geoVidrios, matVidrios);
+      meshVidrios.rotation.x = -Math.PI / 2; // ROTACION x
+      meshVidrios.position.set(28.2, 0.2, -8.5);// POSICION ENCIMA DEL PISO
+
+      // INICIA OCULTO
+      meshVidrios.visible = false;
+      escena.add(meshVidrios);
+    }
+    piso1();
+
+    //----------- Recepcion------------///////
+    let meshRecepcion;
+
+    function Recepcion() {
+      const formaTotal = new THREE.Shape();
+
+      formaTotal.moveTo(0, 0);
+      formaTotal.lineTo(2.5, 0);
+      formaTotal.lineTo(2.5, 13.2);
+      formaTotal.lineTo(0, 13.2);
+      formaTotal.lineTo(0, 0);
+
+      // PISO
+      const geoPiso = new THREE.ExtrudeGeometry(formaTotal, { depth: 0.2, bevelEnabled: false });
+
+      const matPiso = new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0x777777
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+      mallaPiso.position.set(-2.6, 0.2, -2.8);
+
+      escena.add(mallaPiso);
+
+      // MESH RECEPCION
+      const geoRecepcion = new THREE.ExtrudeGeometry(
+        formaTotal,
+        {
+          depth: 2.7,
+          bevelEnabled: false
+        }
+      );
+
+      const matRecepcion =
+        new THREE.MeshPhysicalMaterial({
+          color: 0x00ff88,
+          transparent: true,
+          opacity: 0.25,
+          transmission: 1,
+          roughness: 0,
+          metalness: 0,
+          clearcoat: 1,
+          side: THREE.DoubleSide
+        });
+
+      // MESH GLOBAL
+      meshRecepcion = new THREE.Mesh(
+        geoRecepcion,
+        matRecepcion
+      );
+
+      meshRecepcion.rotation.x = -Math.PI / 2;
+      meshRecepcion.position.set(-2.6, 0.2, -2.8);
+
+      // INICIA OCULTO
+      meshRecepcion.visible = false;
+      escena.add(meshRecepcion);
+    }
+    Recepcion();
+
+    // Tics
+    let meshTics;
+
+    function Tics() {
+      const formaTotal = new THREE.Shape();
+
+      formaTotal.moveTo(0, 0);
+      formaTotal.lineTo(2, 0);
+      formaTotal.lineTo(2, 2.2);
+      formaTotal.lineTo(0, 2.2);
+      formaTotal.lineTo(0, 0);
+
+      // PISO
+      const geoPiso = new THREE.ExtrudeGeometry(
+        formaTotal,
+        {
+          depth: 0.2,
+          bevelEnabled: false
+        }
+      );
+
+      const matPiso = new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0x777777
+      });
+
+      const mallaPiso = new THREE.Mesh(geoPiso, matPiso);
+      mallaPiso.rotation.x = -Math.PI / 2;
+
+      // POSICION PISO
+      mallaPiso.position.set(28.1, 0.2, 0);
+      escena.add(mallaPiso);
+
+      // MESH TICS
+      const geoTics = new THREE.ExtrudeGeometry(formaTotal, { depth: 2.7, bevelEnabled: false });
+
+      const matTics =
+        new THREE.MeshPhysicalMaterial({
+          color: 0xff8800,
+          transparent: true,
+          opacity: 0.25,
+          transmission: 1,
+          roughness: 0,
+          metalness: 0,
+          clearcoat: 1,
+          side: THREE.DoubleSide
+        });
+
+      // MESH GLOBAL
+      meshTics = new THREE.Mesh(geoTics, matTics);
+      meshTics.rotation.x = -Math.PI / 2;// ROTACION
+      meshTics.position.set(28.1, 0.2, 0);// POSICION MESH
+
+      meshTics.visible = false;
+      escena.add(meshTics);
+    }
+
+    Tics();
+
+    //////////////////////////Paredes ////////////////////////
+    //pared blanca
+    function pared_blanca(ancho, alto, x, y, z, rotation, Prof = 0.2, vAncho = 0, vAlto = 0, vOffsetX = 0, vOffsetY = 0,) {
+      // Si no hay ventana, pared simple
+      if (vAncho === 0 || vAlto === 0) {
+        const m = new THREE.Mesh(
+          new THREE.BoxGeometry(ancho, alto, Prof),
+          matBlancoFondo,
+        );
+        m.position.set(x, y, z);
+        m.rotation.y = rotation;
+        m.receiveShadow = true;
+        m.castShadow = true;
+        escena.add(m);
+        return m;
+      }
+
+      // Con hueco
+      const grupo = new THREE.Group();
+
+      function bl(w, h, px, py) {
+        const m = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, Prof),
+          matBlancoFondo,
+        );
+        m.position.set(px, py, 0);
+        m.receiveShadow = true;
+        m.castShadow = true;
+        grupo.add(m);
+      }
+
+      const anchoIzq = ancho / 2 + vOffsetX - vAncho / 2;
+      const anchoDer = ancho / 2 - vOffsetX - vAncho / 2;
+      const altoSup = alto / 2 - vOffsetY - vAlto / 2;
+      const altoInf = alto / 2 + vOffsetY - vAlto / 2;
+
+      if (anchoIzq > 0) bl(anchoIzq, alto, -(ancho / 2 - anchoIzq / 2), 0);
+      if (anchoDer > 0) bl(anchoDer, alto, ancho / 2 - anchoDer / 2, 0);
+      if (altoSup > 0) bl(vAncho, altoSup, vOffsetX, alto / 2 - altoSup / 2);
+      if (altoInf > 0) bl(vAncho, altoInf, vOffsetX, -alto / 2 + altoInf / 2);
+
+      grupo.position.set(x, y, z);
+      grupo.rotation.y = rotation;
+      escena.add(grupo);
+      return grupo;
+    }
+
+    //Pared Interna  ancho,alto,x,y,z,rotation,Prof = 0.2,vAncho = 0,vAlto = 0,vOffsetX = 0,vOffsetY = 0,
+    pared_blanca(13, 3, 0, 1.7, -9.5, Math.PI / 2, 0.2, 2, 1.2, -2);
+    pared_blanca(35.5, 6.5, 17.668, 3.4, 0, 0, 0.3);
+    pared_blanca(27.3, 6.5, 28.7, 3.4, -12, -19.92, 0.4);
+    pared_blanca(10.5, 6.5, 17, 3.4, -24, 0, 0.3);
+    pared_blanca(12, 3, 6, 1.7, -16, 0);
+    pared_blanca(8, 3, 11.85, 1.7, -20, Math.PI / 2);
+    //analistas
+    pared_blanca(4.9, 2.9, 30.7, 1.7, -2.4, 0);
+    pared_blanca(4.6, 2.9, 30.7, 1.7, -4.4, 0);
+    pared_blanca(2.4, 2.9, 29.6, 1.7, -8.4, 0);
+    pared_blanca(2.5, 2.9, 28.3, 1.7, -1.1, Math.PI / 2, 0.2, 0.7, 2, 0.2, -0.7);//abajo de analistas
+    pared_blanca(2.5, 2.9, 28.3, 1.7, -3, Math.PI / 2, 0.2, 0.7, 2, 0.2, -0.7);//abajo de analistas
+    pared_blanca(4.5, 2.9, 28.3, 1.7, -6.23, Math.PI / 2, 0.2, 2, 2, 0.2, -0.7);//abajo de analistas
+
+    //Tabla de madera
+    const maderaTexture = textureLoader.load(
+      "https://threejs.org/examples/textures/hardwood2_diffuse.jpg",
+    );
+    // Configurar la textura para que se repita correctamente
+    maderaTexture.wrapS = THREE.RepeatWrapping;
+    maderaTexture.wrapT = THREE.RepeatWrapping;
+    maderaTexture.repeat.set(4, 1);
+
+    const matMaderaRojaTabla = new THREE.MeshStandardMaterial({
+      map: maderaTexture,
+      color: 0x7b3f00,
+    });
+
+    const genTablamadera = new THREE.BoxGeometry(8.5, 0.8, 0.04);
+    const Tablamadera = new THREE.Mesh(genTablamadera, matMaderaRojaTabla);
+    Tablamadera.position.set(28.4, 3.6, -4.2);
+    Tablamadera.rotation.y = Math.PI / 2;
+
+    Tablamadera.castShadow = true;
+    Tablamadera.receiveShadow = true;
+
+    escena.add(Tablamadera);
+
+    // Marco de aluminio gris industrial
+    const matMarcoAluminio = new THREE.MeshStandardMaterial({
+      color: 0x2c2c2c,
+      roughness: 0.5,
+      metalness: 0.8,
+    });
+
+    // Vidrio azulado transparente
+    const matVidrioPanel = new THREE.MeshStandardMaterial({
+      color: 0x88ccff,
+      transparent: true,
+      opacity: 0.4,
+      roughness: 0.1,
+      metalness: 1.0,
+      side: THREE.DoubleSide,
+    });
+
+    function crearPanelVentanasPro(x, y, z, anchoTotal, columnas, alturasFilas, rotY = 0,) {
+      const grupoPanel = new THREE.Group();
+      const grosorMarco = 0.04;
+      const grosorVidrio = 0.05;
+
+      // Calculamos el alto total sumando las alturas de las filas + los marcos
+      const altoTotal =
+        alturasFilas.reduce((a, b) => a + b, 0) +
+        grosorMarco * (alturasFilas.length + 1);
+      const anchoVidrio =
+        (anchoTotal - grosorMarco * (columnas + 1)) / columnas;
+
+      // 1. MARCOS HORIZONTALES
+      let alturaAcumulada = -altoTotal / 2;
+
+      // Marco base
+      const marcoBase = new THREE.Mesh(
+        new THREE.BoxGeometry(anchoTotal, grosorMarco, grosorMarco),
+        matMarcoAluminio,
+      );
+      marcoBase.position.y = alturaAcumulada + grosorMarco / 2;
+      grupoPanel.add(marcoBase);
+
+      alturasFilas.forEach((altoFila, index) => {
+        // 2. VIDRIOS Y MARCOS VERTICALES DE ESTA FILA
+        for (let c = 0; c < columnas; c++) {
+          // Vidrio
+          const vidrio = new THREE.Mesh(
+            new THREE.BoxGeometry(anchoVidrio, altoFila, grosorVidrio),
+            matVidrioPanel,
+          );
+          vidrio.position.x =
+            -anchoTotal / 2 +
+            (anchoVidrio / 2 + grosorMarco) +
+            c * (anchoVidrio + grosorMarco);
+          vidrio.position.y = alturaAcumulada + grosorMarco + altoFila / 2;
+          grupoPanel.add(vidrio);
+        }
+
+        // Parales verticales para esta sección de altura
+        for (let j = 0; j <= columnas; j++) {
+          const barraV = new THREE.Mesh(
+            new THREE.BoxGeometry(grosorMarco, altoFila, grosorMarco),
+            matMarcoAluminio,
+          );
+          barraV.position.x =
+            -anchoTotal / 2 +
+            j * (anchoVidrio + grosorMarco) +
+            grosorMarco / 2;
+          barraV.position.y = alturaAcumulada + grosorMarco + altoFila / 2;
+          grupoPanel.add(barraV);
+        }
+
+        // 3. SIGUIENTE MARCO HORIZONTAL (Divisor)
+        alturaAcumulada += altoFila + grosorMarco;
+        const marcoDivisor = new THREE.Mesh(
+          new THREE.BoxGeometry(anchoTotal, grosorMarco, grosorMarco),
+          matMarcoAluminio,
+        );
+        marcoDivisor.position.y = alturaAcumulada + grosorMarco / 2;
+        grupoPanel.add(marcoDivisor);
+      });
+
+      // Posicionamiento final
+      grupoPanel.position.set(x, y, z);
+      grupoPanel.rotation.y = rotY;
+
+      escena.add(grupoPanel);
+      return grupoPanel;
+    }
+    // Ejemplo 1: Dos filas, la de abajo de 4 unidades y la de arriba de 1 unidad
+    crearPanelVentanasPro(28.4, 5.2, -4, 8, 8, [1.5, 0.8], Math.PI / 2);
+
+    //////////////////////////////////////////////////
+    ///////////// Racks //////////////////////////
+    ////////////////////////////////////////////////
+    //Rak1
+    const Rak1Base_x = [1.5, 2.7, 4, 5.1, 6.3, 7.4, 8.7, 9.8, 11.1, 12.3, 15.9, 17.1, 18.3, 19.4, 20.8, 21.9, 23.1, 24.3];
+    const Rak1Base_yEstándar = [0.2, 1.3, 2.5, 3.7, 4.9];
+    //Especial
+    const Rak1Base_xespecial = [13.6, 14.7, 25.5, 26.7];
+    const Rak1Base_yespecial = [null, null, 2.5, 3.7, 4.9];
+
+    //Rak2
+    const Rak2Base_x = [1.5, 2.7, 4, 5.1, 6.3, 7.4, 8.7, 9.8, 11.1, 12.3];
+    const Rak2Base_yEstándar = [0.2, 0.7, 1.3, 2.5, 3.7, 4.9];
+    //Especial Solo superior
+    const Rak2SuperiorBase_xEspecial = [13.5, 14.7];
+    const Rak2SuperiorBase_yEspecial = [null, null, null, null, 4.9];
+    // Especial
+    const Rak2Base_xEspecial = [15.9, 17.1, 18.3, 19.4, 20.8, 21.9, 23.1, 24.3, 25.5, 26.7];
+    const Rak2Base_yEspecial = [0.2, 1.3, 2.5, 3.7, 4.9];
+
+    //Rak3
+    const Rak3Base_x = [1.5, 2.7, 4, 5.1, 6.3, 7.4, 8.7, 9.8, 11.1, 12.3];
+    const Rak3Base_yEstándar = [0.2, 0.7, 1.3, 2.5, 3.7, 4.9];
+    //Especial Superior
+    const Rak3Superior_xEspecial = [13.5, 14.7];
+    const Rak3Superior_yEspecial = [null, null, null, null, 4.9];
+    // Especial
+    const Rak3Base_xEspecial = [15.9, 17.1, 18.3, 19.4, 20.8, 21.9, 23.1, 24.3, 25.5, 26.7];
+    const Rak3Base_yEspecial = [0.2, 1.3, 2.5, 3.7, 4.9];
+
+    //Rak4
+    const Rak4Base_x = [1.5, 2.7, 4, 5.1, 6.3, 7.4, 8.7, 9.8, 11.1, 12.3, 15.9, 17.1, 18.3, 19.4, 20.8, 21.9, 23.1, 24.3, 25.5, 26.7];
+    const Rak4Base_yEstándar = [0.2, 1.3, 2.5, 3.7, 4.9];
+    //Especial Superior
+    const Rak4Superior_xEspecial = [13.5, 14.7];
+    const Rak4Superior_yEspecial = [null, null, null, null, 4.9];
+
+    //Rak5
+    const Rak5Base_x = [1.5, 2.7, 4, 5.1, 6.3, 7.4, 8.7, 9.8, 11.1, 12.3, 15.9, 17.1, 18.3, 19.4, 20.8, 21.9, 23.1, 24.3];
+    const Rak5Base_yEstándar = [0.2, 1.3, 2.5, 3.7, 4.9];
+    //Especial Superior
+    const Rak5Superior_xEspecial = [13.5, 14.7];
+    const Rak5Superior_yEspecial = [null, null, null, null, 4.9];
+
+    //Rak6
+    const Rak6Base_x = [1, 2.2, 3.5, 4.6, 5.8, 6.9, 8.2, 9.3, 10.6, 11.8];
+    const Rak6Base_yEstándar = [0.2, 1.3, 2.5, 3.7, 4.9];
+    //Rak6 SuperEspecial
+    const Rak6Basedetres_x = [13.1, 14.2];
+    const Rak6Basedetres_y = [0.2, 1.6, 3.6, 4.9];
+    //Rak6 Especial
+    const Rak6BaseEspecial_x = [15.4, 16.6];
+    const Rak6BaseEspecial_y = [null, null, null, null, 4.9];
+    //Rak6 SuperEspecial
+    const Rak6BaseSuperEspecial_x = [18, 19.1, 22.6, 23.8];
+    const Rak6BaseSuperEspecial_y = [null, null, 2.5, 3.6, 4.9];
+    //Rak6 MegaEspecial
+    const Rak6BaseMegaEspecial_x = [20.2, 21.4];
+    const Rak6BaseMegaEspecial_y = [null, 2.5, null, null, 4.9];
+    //Rak6 MegaEspecial
+    const Rak6BaseSuperior_x = [15.5, 16.7];
+    const Rak6BaseSuperior_y = [null, null, null, null, 4.9];
+
+    // Rak 7
+    const Rak7Base_x = [1.2, 2.4, 3.6, 4.8, 6, 7.2];
+    const Rak7Base_y = [0.5, 1.2];
+
+    //Rak 7
+    const Rak7Super_x = [1.2, 2.4, 3.6, 4.8, 6, 7.2];
+    const Rak7Super_y = [2.4, 3.6, 4.8];
+
+    // Rak 8
+    const Rak8Base_x = [1.2, 2.4];
+    const Rak8Base_y = [0.5, 1.2, 2.4, 3.6, 4.8];
+
+    const Rak8Der_x = [3.6, 4.8];
+    const Rak8Der_y = [0.5, 1.2, 2.4, 3.6, 4.8];
+
+    // Rak 9
+    const Rak9Base_x = [1.2, 2.4, 3.6, 4.8];
+    const Rak9Base_y = [0.5, 1.2, 2.4];
+
+    const Rak9Super_x = [1.2, 2.4, 3.6, 4.8];
+    const Rak9Super_y = [3.6, 4.8];
+
+    // Rak 10
+    const Rak10Base_x = [1.2, 2.4, 3.6, 4.8, 6, 7.2];
+    const Rak10Base_y = [0.5, 1.2, 2.4, 3.6, 4.9];
+
+
+    const configuracionRacks = [
+      { id: "Rack1", nombreRack: "01", z: -0.7, x: [...Rak1Base_x], y: [...Rak1Base_yEstándar] },
+      { id: "Rack1", nombreRack: "01", z: -0.7, x: [...Rak1Base_xespecial], y: [...Rak1Base_yespecial] },
+
+      { id: "Rack2", z: -4.2, x: [...Rak2Base_x], y: [...Rak2Base_yEstándar] },
+      { id: "Rack2", z: -4.2, x: [...Rak2SuperiorBase_xEspecial], y: [...Rak2SuperiorBase_yEspecial] },
+      { id: "Rack2", z: -4.2, x: [...Rak2Base_xEspecial], y: [...Rak2Base_yEspecial] },
+
+      { id: "Rack3", z: -5.6, x: [...Rak3Base_x], y: [...Rak3Base_yEstándar] },
+      { id: "Rack3", z: -5.6, x: [...Rak3Superior_xEspecial], y: [...Rak3Superior_yEspecial] },
+      { id: "Rack3", z: -5.6, x: [...Rak3Base_xEspecial], y: [...Rak3Base_yEspecial] },
+
+
+      { id: "Rack4", z: -9.6, x: [...Rak4Base_x], y: [...Rak4Base_yEstándar] },
+      { id: "Rack4", z: -9.6, x: [...Rak4Superior_xEspecial], y: [...Rak4Superior_yEspecial] },
+
+      { id: "Rack5", z: -11, x: [...Rak5Base_x], y: [...Rak5Base_yEstándar] },
+      { id: "Rack5", z: -11, x: [...Rak5Superior_xEspecial], y: [...Rak5Superior_yEspecial] },
+
+      { id: "Rack6", z: -15, x: [...Rak6Base_x], y: [...Rak6Base_yEstándar] },
+      { id: "Rack6", z: -15, x: [...Rak6Basedetres_x], y: [...Rak6Basedetres_y] },
+      { id: "Rack6", z: -15, x: [...Rak6BaseSuperEspecial_x], y: [...Rak6BaseSuperEspecial_y] },
+      { id: "Rack6", z: -15, x: [...Rak6BaseMegaEspecial_x], y: [...Rak6BaseMegaEspecial_y] },
+      { id: "Rack6", z: -15, x: [...Rak6BaseSuperior_x], y: [...Rak6BaseSuperior_y] },
+
+      { id: "Rack7", z: -24.2, x: [...Rak7Base_x], y: [...Rak7Base_y], rotado: true, x_mundo: 12.6 },
+      { id: "Rack7", z: -24.21, x: [...Rak7Super_x], y: [...Rak7Super_y], rotado: true, x_mundo: 12.6 },
+
+
+      { id: "Rack8", z: -24.3, x: [...Rak8Base_x], y: [...Rak8Base_y], rotado: true, x_mundo: 16.4 },
+      { id: "Rack8", z: -24.31, x: [...Rak8Der_x], y: [...Rak8Der_y], rotado: true, x_mundo: 16.4 },
+
+      { id: "Rack9", z: -24.3, x: [...Rak9Base_x], y: [...Rak9Base_y], rotado: true, x_mundo: 17.7 },
+      { id: "Rack9", z: -24.32, x: [...Rak9Super_x], y: [...Rak9Super_y], rotado: true, x_mundo: 17.7 },
+
+      { id: "Rack10", z: -24.22, x: [...Rak10Base_x], y: [...Rak10Base_y], rotado: true, x_mundo: 21.6 },
+    ];
+
+    // ================= LÓGICA =================
+    function calcularPuntosBodega(config) {
+      const puntos = [];
+
+      const mapaColumnasPorRack = {};
+      config.forEach(grupo => {
+        if (!mapaColumnasPorRack[grupo.id]) {
+          mapaColumnasPorRack[grupo.id] = new Set();
+        }
+        grupo.x.forEach(posX => mapaColumnasPorRack[grupo.id].add(posX));
+      });
+
+      const reglasCC = {};
+      const invertirColumna = { Rack7: true, Rack8: true, Rack9: true, Rack10: true };
+      for (let id in mapaColumnasPorRack) {
+        reglasCC[id] = Array.from(mapaColumnasPorRack[id]).sort((a, b) =>
+          invertirColumna[id] ? b - a : a - b
+        );
+      }
+
+      const idsRacksUnicos = [...new Set(config.map(c => c.id))];
+
+      // mapa estable (NO depende del orden)
+      const mapaRR = {};
+      idsRacksUnicos.forEach((id, i) => {
+        mapaRR[id] = (i + 1).toString().padStart(2, '0');
+      });
+
+      config.forEach((grupo) => {
+        const rr = grupo.nombreRack || mapaRR[grupo.id];
+
+        grupo.x.forEach((posX) => {
+          const numeroColumna = reglasCC[grupo.id].indexOf(posX) + 1;
+          const cc = numeroColumna.toString().padStart(2, '0');
+
+          grupo.y.forEach((posY, indexNiv) => {
+            if (posY === null) return; // evita huecos
+            const nn = (indexNiv + 1).toString().padStart(2, '0');
+
+            puntos.push({
+              x: posX,
+              y: posY,
+              z: grupo.z,
+              id: `${rr}${cc}${nn}`,
+              rotado: grupo.rotado || false,
+              x_mundo: grupo.x_mundo || 0
+            });
+          });
+        });
+      });
+
+      return puntos;
+    }
+    const misEstibas = calcularPuntosBodega(configuracionRacks);
+
+    // ================= TEXTURA =================
+    let texturaCache = null;
+
+    function crearTexturaMaderaSimple() {
+      if (texturaCache) return texturaCache;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#D4A84B';
+      ctx.fillRect(0, 0, 256, 256);
+
+      ctx.fillStyle = 'rgba(40, 25, 5, 0.10)';
+      for (let i = 0; i < 100; i++) {
+        ctx.fillRect(Math.random() * 256, 0, Math.random() * 2, 256);
+      }
+
+      texturaCache = new THREE.CanvasTexture(canvas);
+      texturaCache.wrapS = texturaCache.wrapT = THREE.RepeatWrapping;
+
+      return texturaCache;
+    }
+
+    const matEstibaMadera = new THREE.MeshStandardMaterial({
+      map: crearTexturaMaderaSimple(),
+      roughness: 0.9,
+      metalness: 0
+    });
+
+
+    // ================= GEOMETRÍA =================
+    function fusionarGeometrias(geometrias) {
+      return mergeGeometries(geometrias, false);
+    }
+
+    function crearGeometriaEstibaMaestra() {
+      const piezas = [];
+
+      const fabricar = (w, h, d, x, y, z) => {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        geo.translate(x, y, z);
+        piezas.push(geo);
+      };
+
+      const posXi = [-0.425, 0, 0.425];
+      const posZi = [-0.525, 0, 0.525];
+
+      posXi.forEach(x => fabricar(0.15, 0.02, 1.2, x, 0.01, 0));
+
+      posXi.forEach(x => {
+        posZi.forEach(z => fabricar(0.15, 0.1, 0.15, x, 0.02 + 0.05, z));
+      });
+
+      posZi.forEach(z => fabricar(1.0, 0.02, 0.15, 0, 0.02 + 0.1 + 0.01, z));
+      const alturaTop = 0.02 + 0.1 + 0.02 + 0.01;
+
+      for (let i = 0; i < 7; i++) {
+        fabricar(1.0, 0.02, 0.12, 0, alturaTop, -0.54 + (i * 0.18));
+      }
+
+      const geoFinal = fusionarGeometrias(piezas);
+      piezas.forEach(p => p.dispose());
+
+      return geoFinal;
+    }
+
+    // Geometrías y materiales compartidos para cajas en estibas
+    const _cajaGeo = new THREE.BoxGeometry(0.85, 0.4, 0.95);
+    const _tiraHGeo = new THREE.BoxGeometry(0.87, 0.03, 0.97);
+    const _tiraVGeo = new THREE.BoxGeometry(0.03, 0.42, 0.03);
+
+    const _matCajaOcupada = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.75, metalness: 0.05, side: THREE.DoubleSide });
+    const _matTira = new THREE.MeshStandardMaterial({ color: 0x5D3A1A, roughness: 0.9, side: THREE.DoubleSide });
+
+    // MODELO BASE (SE CREA UNA SOLA VEZ)
+    const _modeloCaja = new THREE.Group();
+
+    const caja = new THREE.Mesh(_cajaGeo, _matCajaOcupada);
+    caja.position.y = 0.25;
+    caja.castShadow = false;
+    caja.receiveShadow = false;
+    _modeloCaja.add(caja);
+
+    const tiraH1 = new THREE.Mesh(_tiraHGeo, _matTira);
+    tiraH1.position.y = 0.35;
+    _modeloCaja.add(tiraH1);
+
+    const tiraH2 = new THREE.Mesh(_tiraHGeo, _matTira);
+    tiraH2.position.y = 0.15;
+    _modeloCaja.add(tiraH2);
+
+    const tiraV1 = new THREE.Mesh(_tiraVGeo, _matTira);
+    tiraV1.position.set(0.4, 0.25, 0.47);
+    _modeloCaja.add(tiraV1);
+
+    const tiraV2 = new THREE.Mesh(_tiraVGeo, _matTira);
+    tiraV2.position.set(-0.4, 0.25, 0.47);
+    _modeloCaja.add(tiraV2);
+
+    function crearCajaOcupada(x, y, z) {
+
+      const grupo = _modeloCaja.clone(false);
+
+      _modeloCaja.children.forEach(child => {
+        grupo.add(child.clone());
+      });
+
+      grupo.position.set(x, y + 0.12, z);
+
+      return grupo;
+    }
+
+    const _BW = 2.6, _BH = 1.2, _BD = 1.7;
+    let _canastillaGeos = null;
+
+    function crearGeometriasCanastilla() {
+      if (_canastillaGeos) return _canastillaGeos;
+      const groups = { main: [], dark: [], mid: [], rim: [], label: [], void: [] };
+      const hw = _BW / 2, hh = _BH / 2, hd = _BD / 2;
+      const T = 0.055, TT = T * 0.8;
+
+      function addBox(w, h, d, x, y, z, key) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        geo.translate(x, y, z);
+        groups[key].push(geo);
+      }
+
+      // 1. PISO
+      for (let i = 0; i < 6; i++) {
+        addBox(_BW - T * 4, T * 1.1, _BD / 6 * 0.62, 0, -hh + T * 0.55, -hd + _BD / 6 * (i + 0.5), 'dark');
+      }
+      for (let i = 0; i < 5; i++) {
+        addBox(T * 0.9, T * 0.9, _BD - T * 4, -hw + T * 2 + (_BW - T * 4) / 4 * i, -hh + T * 0.55, 0, 'dark');
+      }
+      // 2. POSTES ESQUINEROS
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+        addBox(T * 2.8, _BH, T * 2.8, sx * (hw - T * 1.4), 0, sz * (hd - T * 1.4), 'main');
+      });
+      // 3. BANDAS HORIZONTALES
+      const bands = [-hh + T * 0.9, -hh + _BH * 0.42, hh - T * 2.4];
+      bands.forEach(by => {
+        const bh = T * 2.0;
+        addBox(_BW - T * 5.5, bh, T, 0, by, -hd + T * 0.5, 'mid');
+        addBox(_BW - T * 5.5, bh, T, 0, by, hd - T * 0.5, 'dark');
+        addBox(T, bh, _BD - T * 5.5, -hw + T * 0.5, by, 0, 'dark');
+        addBox(T, bh, _BD - T * 5.5, hw - T * 0.5, by, 0, 'main');
+      });
+      // 4. BARRAS VERTICALES frente/atrás
+      const barH = _BH - T * 3.5;
+      const barY = -hh + T * 1.8 + barH / 2;
+      for (let i = 0; i < 10; i++) {
+        const x = -hw + T * 2.8 + (_BW - T * 5.6) / 9 * i;
+        addBox(TT, barH, TT, x, barY, -hd + T * 0.5, 'mid');
+        addBox(TT, barH, TT, x, barY, hd - T * 0.5, 'dark');
+      }
+      for (let i = 0; i < 3; i++) {
+        const y = -hh + T * 2.5 + (barH - T * 2) / 3 * (i + 0.5);
+        addBox(_BW - T * 5.5, TT, TT, 0, y, -hd + T * 0.5, 'mid');
+        addBox(_BW - T * 5.5, TT, TT, 0, y, hd - T * 0.5, 'dark');
+      }
+      // 5. BARRAS VERTICALES laterales
+      for (let i = 0; i < 6; i++) {
+        const z = -hd + T * 2.8 + (_BD - T * 5.6) / 5 * i;
+        addBox(TT, barH, TT, -hw + T * 0.5, barY, z, 'dark');
+        addBox(TT, barH, TT, hw - T * 0.5, barY, z, 'main');
+      }
+      for (let i = 0; i < 3; i++) {
+        const y = -hh + T * 2.5 + (barH - T * 2) / 3 * (i + 0.5);
+        addBox(TT, TT, _BD - T * 5.5, -hw + T * 0.5, y, 0, 'dark');
+        addBox(TT, TT, _BD - T * 5.5, hw - T * 0.5, y, 0, 'main');
+      }
+      // 6. COLUMNA CENTRAL
+      addBox(T * 1.8, _BH, T, 0, 0, -hd + T * 0.5, 'main');
+      addBox(T * 1.8, _BH, T, 0, 0, hd - T * 0.5, 'dark');
+      addBox(T, _BH, T * 1.8, -hw + T * 0.5, 0, 0, 'dark');
+      addBox(T, _BH, T * 1.8, hw - T * 0.5, 0, 0, 'main');
+      // 7. RIM SUPERIOR
+      const rimH = T * 2.2, rimThk = T * 2.0;
+      addBox(_BW, rimH, rimThk, 0, hh - rimH / 2, -hd + rimThk / 2, 'rim');
+      addBox(_BW, rimH, rimThk, 0, hh - rimH / 2, hd - rimThk / 2, 'rim');
+      addBox(rimThk, rimH, _BD, -hw + rimThk / 2, hh - rimH / 2, 0, 'rim');
+      addBox(rimThk, rimH, _BD, hw - rimThk / 2, hh - rimH / 2, 0, 'rim');
+      // 8. MANIJAS
+      const hndW = T * 3.0, hndH = _BH * 0.30, hndD = _BD * 0.26;
+      const hndY = hh - hndH / 2 - T * 1.8;
+      addBox(hndW, hndH, hndD, -hw - hndW / 2 + T * 0.5, hndY, 0, 'main');
+      addBox(hndW * 0.5, hndH * 0.50, hndD * 0.88, -hw - hndW * 0.08, hndY + hndH * 0.04, 0, 'void');
+      addBox(hndW, hndH, hndD, hw + hndW / 2 - T * 0.5, hndY, 0, 'main');
+      addBox(hndW * 0.5, hndH * 0.50, hndD * 0.88, hw + hndW * 0.08, hndY + hndH * 0.04, 0, 'void');
+      // 9. REFUERZOS ESQUINA
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+        addBox(T * 0.9, _BH * 0.82, T * 2.0, sx * (hw + T * 0.3), -hh + _BH * 0.41, sz * (hd - T * 3.5), 'dark');
+      });
+      // 10. ETIQUETA
+      addBox(_BW * 0.34, _BH * 0.22, T * 0.5, _BW * 0.11, -hh + _BH * 0.34, -hd - T * 0.12, 'label');
+
+      const result = {};
+      for (const key of Object.keys(groups)) {
+        result[key] = mergeGeometries(groups[key], false);
+        groups[key].forEach(g => g.dispose());
+      }
+      _canastillaGeos = result;
+      return result;
+    }
+
+    function crearCanastilla(color) {
+      const g = new THREE.Group();
+      const geos = crearGeometriasCanastilla();
+      const base = new THREE.Color(color);
+      function mat(col, rough) { return new THREE.MeshStandardMaterial({ color: col, roughness: rough || 0.72, metalness: 0.03, side: THREE.DoubleSide }); }
+      [
+        { key: 'main', color: base, rough: 0.72 },
+        { key: 'dark', color: base.clone().multiplyScalar(0.70), rough: 0.80 },
+        { key: 'mid', color: base.clone().multiplyScalar(0.84), rough: 0.75 },
+        { key: 'rim', color: base.clone().multiplyScalar(1.06), rough: 0.62 },
+        { key: 'label', color: base.clone().multiplyScalar(0.58), rough: 0.85 },
+        { key: 'void', color: 0x0a120a, rough: 1.0 },
+      ].forEach(({ key, color, rough }) => {
+        const mesh = new THREE.Mesh(geos[key], mat(color, rough));
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        g.add(mesh);
+      });
+      g.scale.set(0.48 / _BW, 0.48 / _BW, 0.48 / _BW);
+      return g;
+    }
+
+    let _modeloCanastillas = null;
+
+    function obtenerModeloCanastillas() {
+
+      if (_modeloCanastillas) return _modeloCanastillas;
+
+      const grupo = new THREE.Group();
+      const gruposuperior = new THREE.Group();
+
+      const colores = [
+        0x5196F3,
+        0x4CAF50,
+        0xFF9800,
+        0xFF9800,
+        0xFF9800,
+        0xFF9800
+      ];
+
+      const posiciones = [
+        { x: 0.30, z: 0 },
+        { x: -0.24, z: 0 },
+        { x: -0.24, z: -0.35 },
+        { x: -0.24, z: 0.35 },
+        { x: 0.24, z: 0.35 },
+        { x: 0.24, z: -0.35 },
+      ];
+
+      colores.forEach((color, i) => {
+
+        const can = crearCanastilla(color);
+
+        can.position.set(
+          posiciones[i].x,
+          0,
+          posiciones[i].z
+        );
+
+        grupo.add(can);
+
+      });
+
+      colores.forEach((color, i) => {
+        const can = crearCanastilla(color);
+
+        can.position.set(
+          posiciones[i].x,
+          0,
+          posiciones[i].z
+        );
+
+        gruposuperior.add(can);
+
+      });
+
+      gruposuperior.position.set(0, 0.2, 0);
+      grupo.add(gruposuperior);
+      _modeloCanastillas = grupo;
+
+      return _modeloCanastillas;
+    }
+
+    function crearCanastillas(x, y, z) {
+      const grupo = obtenerModeloCanastillas().clone(true);
+
+      grupo.position.set(
+        x,
+        y + 0.3,
+        z
+      );
+
+      return grupo;
+    }
+    // ================= RENDER =================
+    const mapaEstibas = new Map();//MAPA DE ESTIBAS
+
+    function generarBodegaEstibas(
+      geometria,
+      material,
+      puntos
+    ) {
+
+      const mesh = new THREE.InstancedMesh(
+        geometria,
+        material,
+        puntos.length
+      );
+
+      const dummy = new THREE.Object3D();
+      puntos.forEach((p, i) => {
+
+        if (p.rotado) {
+          // Rack girado
+          dummy.position.set(
+            p.x_mundo,
+            p.y,
+            p.z + p.x
+          );
+          dummy.rotation.y =
+            Math.PI / 2;
+        } else {
+          dummy.position.set(
+            p.x,
+            p.y,
+            p.z
+          );
+          dummy.rotation.y = 0;
+        }
+        dummy.updateMatrix();
+
+        // MATRIZ DE LA INSTANCIA
+        mesh.setMatrixAt(
+          i,
+          dummy.matrix
+        );
+
+        // GUARDAR DATOS DE LA ESTIBA
+        mapaEstibas.set(i, {
+          id: p.id,
+          x: p.x,
+          y: p.y,
+          z: p.z,
+          rotado: p.rotado,
+          x_mundo: p.x_mundo
+        });
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      return mesh;
+    }
+
+    const geometriaMaestra = crearGeometriaEstibaMaestra();
+    const mallaBodega = generarBodegaEstibas(geometriaMaestra, matEstibaMadera, misEstibas);
+    escena.add(mallaBodega);
+
+    const instanciasRotables = [];
+    misEstibas.forEach((p, i) => {
+      if (/^(07|08|09|10)/.test(p.id)) instanciasRotables.push(i);
+    });
+    const _dummyRot = new THREE.Object3D();
+
+    // ================= INTERACCIÓN =================
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    let mallaResaltadoActual = null;// Variable global para rastrear el resaltado actual
+
+    // Material tipo "Glow" o brillante para que se note
+    const matResaltado = new THREE.MeshBasicMaterial({
+      color: 0x653EFF,
+      transparent: true,
+      opacity: 0.25,
+      side: THREE.DoubleSide
+    });
+
+    // Geometría un poco más grande que una estiba estándar (ajusta el 1.2 si es necesario)
+    const geoResaltado = new THREE.BoxGeometry(1.2, 1.2, 1.2, 4, 4, 4);
+
+    function seleccionarEstiba(nx, ny) {
+      mouse.x = nx; mouse.y = ny;
+      raycaster.setFromCamera(mouse, camara);
+      const intersects = raycaster.intersectObjects([mallaBodega], true);
+      if (intersects.length > 0) {
+        const instanceId = intersects[0].instanceId;
+        const datos = mapaEstibas.get(instanceId);
+        if (!datos) { cerrarSidebar(); return; }
+        let realX = datos.rotado ? datos.x_mundo : datos.x;
+        let realY = datos.y;
+        let realZ = datos.rotado ? (datos.z + datos.x) : datos.z;
+        if (mallaResaltadoActual) escena.remove(mallaResaltadoActual);
+        mallaResaltadoActual = new THREE.Mesh(geoResaltado, matResaltado);
+        mallaResaltadoActual.position.set(realX, realY + 0.8, realZ);
+        if (datos.rotado) mallaResaltadoActual.rotation.y = Math.PI / 2;
+        escena.add(mallaResaltadoActual);
+        console.log(`Seleccionado: ${datos.id} en [${realX}, ${realY}, ${realZ}]`);
+        abrirSidebar();
+        const inputBuscador = $('#input');
+        inputBuscador.val(datos.id);
+        inputBuscador.trigger('input');
+      } else {
+        cerrarSidebar();
+      }
+    }
+
+    function seleccionarCentro() { seleccionarEstiba(0, 0); }
+
+    window.addEventListener('click', (event) => {
+      if (event.target.tagName !== 'CANVAS') return;
+      if (modoFPS && recienBloqueado) { recienBloqueado = false; return; }
+      if (modoFPS && bloqueado) {
+        seleccionarCentro();
+      } else {
+        seleccionarEstiba(
+          (event.clientX / window.innerWidth) * 2 - 1,
+          -(event.clientY / window.innerHeight) * 2 + 1
+        );
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'e' && modoFPS && controlActivo && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        seleccionarCentro();
+      }
+    });
+
+    $('#input').on('input', function () {
+      limpiarConsultas('#input');
+      console.log('El input cambió');
+
+      function quitarmalla() {
+        const inputBuscador = $('#input');
+        if (inputBuscador.val().trim() === '') {
+          if (mallaResaltadoActual) {
+            escena.remove(mallaResaltadoActual);
+            mallaResaltadoActual = null;
+          }
+        }
+      }
+      quitarmalla();// EJECUTAR FUNCIÓN
+    });
+
+    let baseDeDatos = [];
+    let datosCargados = false;
+    let cajasEspeciales = [];
+
+    // RELACIÓN CATEGORÍA -> UBICACIONES
+    const reglasCategorias = {
+      "UNICA": [
+        "010101",
+      ],
+      "ACT": [
+        "040105", "040104", "040103", "040102", "040101",
+        "040205", "040204", "040203", "040202", "040201",
+        "040305", "040304", "040303", "040302", "040301",
+        "040405", "040404", "040403", "040402", "040401",
+        "040505", "040504", "040503", "040502", "040501",
+        "040605", "040604", "040603", "040602", "040601",
+        "040705", "040704", "040703", "040702", "040701",
+        "040805", "040804", "040803", "040802", "040801",
+        "040905", "040904", "040903", "040902", "040901",
+        "041005", "041004", "041003", "041002", "041001",
+        "041105", "041104", "041103", "041102", "041101",
+        "041205", "041204", "041203", "041202", "041201",
+        "041305", "041304", "041303", "041302", "041301",
+        "041405", "041404", "041403", "041402", "041401",
+        "041505", "041504", "041503", "041502", "041501",
+        "041605", "041604", "041603", "041602", "041601",
+        "041705", "041704", "041703", "041702", "041701",
+        "041805", "041804", "041803", "041802", "041801",
+        "041905", "041904", "041903", "041902", "041901",
+        "042005", "042004", "042003", "042002", "042001",
+        "042105", "042104", "042103", "042102", "042101",
+        "042205", "042204", "042203", "042202", "042201",
+        "050105", "050104", "050103", "050102", "050101",
+        "050205", "050204", "050203", "050202", "050201",
+        "050305", "050304", "050303", "050302", "050301",
+        "050405", "050404", "050403", "050402", "050401",
+        "050505", "050504", "050503", "050502", "050501",
+        "050605", "050604", "050603", "050602", "050601",
+        "050705", "050704", "050703", "050702", "050701",
+        "050805", "050804", "050803", "050802", "050801",
+        "050905", "050904", "050903", "050902", "050901",
+        "051005", "051004", "051003", "051002", "051001",
+        "051105", "051104", "051103", "051102", "051101",
+        "051205", "051204", "051203", "051202", "051201",
+        "051305", "051304", "051303", "051302", "051301",
+        "051405", "051404", "051403", "051402", "051401",
+        "051505", "051504", "051503", "051502", "051501",
+        "051605", "051604", "051603", "051602", "051601",
+        "051705", "051704", "051703", "051702", "051701",
+        "051805", "051804", "051803", "051802", "051801",
+        "051905", "051904", "051903", "051902", "051901",
+        "052005", "052004", "052003", "052002", "052001",
+        "052105", "052104", "052103", "052102", "052101",
+        "052205", "052204", "052203", "052202", "052201"
+      ],
+      "TICS": [
+        "CUARTOTICS",
+      ]
+    };
+
+    // MAPA: división de bodega → prefijos de rack (rr)
+    const mapaDivisiones = {
+      "Rak1 (pendiente por verificar)": ["01"],
+      "Rak2 (dotacion)": ["02"],
+      "Rak3 (microbodega)": ["03"],
+      "Rak4 (desmontes buses)": ["04"],
+      "Rak5 (desmonte estacion)": ["05"],
+      "Rak6 (bajas)": ["06"],
+      "Rak7,8,9,10 (macrobodega)": ["07", "08", "09", "10"],
+      "Piso 1 vidrios": ["VIDRIOS"],  // pendiente definir codigos exactos
+      "Recepcion": ["RECEPCION"], // pendiente definir codigos exactos
+      "Tics": ["TICS"]
+    };
+
+    // Validaciones de relaciones
+    $(document).ready(function () {
+      console.time("Apps Script");
+      console.log("⏳ Iniciando carga...");
+
+
+
+      // Llenar selects de categorias apenas cargue el DOM
+      poblarCategorias();
+
+      google.script.run
+        .withSuccessHandler(data => {
+
+          //mediro de fps
+
+          let ultimo = performance.now();
+          let frames = 0;
+
+          function medirFPS() {
+
+            frames++;
+
+            const ahora = performance.now();
+
+            if (ahora - ultimo >= 1000) {
+
+              console.log("FPS:", frames);
+
+              frames = 0;
+              ultimo = ahora;
+            }
+
+            requestAnimationFrame(medirFPS);
+          }
+
+          medirFPS();
+
+
+          //elimnar
+
+
+
+          //cierre eliminar 
+
+          console.timeEnd("Apps Script");
+
+          console.log("Contenido de data:", data);
+
+          setTimeout(() => {
+            console.log(renderer.info);
+            console.log(scene.children.length);
+            console.log("Objetos:", scene.children.length);
+          }, 5000);
+
+
+
+          // GUARDAR CACHE
+          localStorage.setItem(
+            "inventarioCache",
+            JSON.stringify(data)
+          );
+
+          console.log(
+            "📦 Cache guardado:",
+            (
+              JSON.stringify(data).length /
+              1024 /
+              1024
+            ).toFixed(2),
+            "MB"
+          );
+
+          console.log("Contenido de data:", data);
+
+          console.log("Contenido de data:", data);
+          if (data && Array.isArray(data)) {
+            baseDeDatos = data;
+            datosCargados = true;
+            // RENDERIZADO DE CAJAS
+            console.log(" Iniciando mapeo de cajas sobre estibas...");
+
+            // UBICACIONES OCUPADAS NORMALES
+            const ubicacionesOcupadas = new Set(
+              baseDeDatos.map(f =>
+                String(f[5] || "")
+                  .trim()
+                  .toUpperCase()
+              )
+            );
+
+            // UBICACIONES ESPECIALES POR CATEGORÍA
+            const ubicacionesEspeciales = new Set();
+            console.time("Analisis Datos");
+            baseDeDatos.forEach(fila => {
+              // NOMBRE DEL ARTÍCULO
+              const nombreArticulo = String(fila[5] || "")
+                .toUpperCase()
+                .trim();
+
+              // RECORRER CONFIGURACIONES
+              Object.keys(reglasCategorias).forEach(categoria => {
+
+                // SI EL NOMBRE CONTIENE LA CATEGORÍA
+                if (nombreArticulo.includes(categoria)) {
+                  // AGREGAR UBICACIONES ESPECIALES
+                  reglasCategorias[categoria].forEach(ubicacion => {
+                    ubicacionesEspeciales.add(ubicacion.toUpperCase());
+                  });
+                }
+              });
+            });
+            console.timeEnd("Analisis Datos");
+            console.log("Ubicaciones especiales:", [...ubicacionesEspeciales]);
+
+            // LIMPIAR CAJAS ANTERIORES
+            cajasEspeciales.forEach(caja => {
+              escena.remove(caja);
+            });
+            cajasEspeciales = [];
+            console.time("Construccion Bodega");
+            // RECORRER TODAS LAS ESTIBAS
+            misEstibas.forEach((estiba) => {
+              const idEstiba = String(estiba.id)
+                .trim()
+                .toUpperCase();
+
+              // OCUPACIÓN NORMAL
+              const ocupadoNormal =
+                ubicacionesOcupadas.has(idEstiba);
+
+              // OCUPACIÓN ESPECIAL POR REGLAS
+              const ocupadoEspecial =
+                [...ubicacionesEspeciales].some(patron =>
+                  idEstiba.includes(patron)
+                );
+
+              // RESULTADO FINAL
+              const tieneMercancia = ocupadoNormal || ocupadoEspecial;
+
+              // SI ESTÁ OCUPADA -> CREAR CAJA
+              if (tieneMercancia) {
+                let posX;
+                let posZ;
+
+                // POSICIÓN SEGÚN ROTACIÓN
+                if (estiba.rotado) {
+                  posX = estiba.x_mundo;
+                  posZ = estiba.z + estiba.x;
+
+                } else {
+                  posX = estiba.x;
+                  posZ = estiba.z;
+                }
+
+                // CREAR CAJA (o canastillas para Rack 2 y Rack 7)
+                const esRack2 = estiba.z === -4.2;
+                const esRack7 = estiba.z === -24.21;
+                const esRack8 = estiba.z === -24.31;
+                const esRack9 = estiba.z === -24.32;
+                const esRack10 = estiba.z === -24.22;
+
+                const esCanastilla = esRack2 || esRack7 || esRack8 || esRack9 || esRack10;
+
+                const caja = esCanastilla
+                  ? crearCanastillas(posX, estiba.y, posZ)
+                  : crearCajaOcupada(posX, estiba.y, posZ);
+
+                // COLOR ALEATORIO(solo para cajas normales)
+                if (!esCanastilla) {
+                  const tono = 0.5 + Math.random() * 0.3;
+                  caja.children[0].material.color.setHSL(0.08, tono, 0.3);
+                }
+
+                // ROTAR SI EL RACK ESTÁ ROTADO
+                if (estiba.rotado) {
+                  caja.rotation.y = Math.PI / 2;
+                }
+
+                // AGREGAR A ESCENA
+                escena.add(caja);
+                cajasEspeciales.push(caja);
+              }
+            });
+            console.timeEnd("Construccion Bodega");
+            poblarCategorias();// POBLAR CATEGORÍAS
+
+          }
+        })
+        .withFailureHandler(err => {
+          console.error(
+            " Error crítico de Google Script:",
+            err
+          );
+        })
+        .obtenerDatosRelacionados();
+    });
+
+    // ─── BÚSQUEDA POR UBICACIÓN ───
+    $('#input').on('input', function () {
+      const buscar = $(this).val()
+        .trim()
+        .toUpperCase();
+
+      // LIMPIAR RESALTADOS ANTERIORES
+      if (window.resaltadosCategoria) {
+        window.resaltadosCategoria.forEach(malla => {
+          escena.remove(malla);
+
+        });
+      }
+
+      window.resaltadosCategoria = [];
+      // SI INPUT VACÍO → SALIR
+      if (!datosCargados || buscar === "") {
+        if (mallaResaltadoActual) {
+          escena.remove(mallaResaltadoActual);
+          mallaResaltadoActual = null;
+
+        }
+        return;
+      }
+
+      // NORMALIZADOR
+      const normalizar = v =>
+        String(v ?? "")
+          .replace(/\s+/g, "")
+          .trim()
+          .toUpperCase();
+
+      // BÚSQUEDA NORMAL
+      let coincidencias = baseDeDatos.filter(f =>
+
+        f.some(celda =>
+          normalizar(celda) === normalizar(buscar)
+        )
+
+      );
+
+      // REGLAS ESPECIALES
+      if (coincidencias.length === 0) {
+
+        coincidencias = baseDeDatos.filter(fila => {
+          const categoria = normalizar(fila[5]);
+          const patrones = reglasCategorias[categoria];
+
+          if (!patrones) return false;
+          return patrones.some(p =>
+            normalizar(p) === normalizar(buscar)
+          );
+        });
+      }
+
+      // MOSTRAR RESULTADOS
+      if (coincidencias.length > 0) {
+
+        mostrarEnModal(
+          coincidencias,
+          "Ubicacion: " + buscar
+        );
+
+      } else {
+        mostrarEnModal(
+          null,
+          "Sin resultados para: " + buscar
+        );
+
+      }
+
+      // RESALTAR UBICACIONES
+      const ubicaciones = [];
+
+      // SI EXISTE COMO CATEGORÍA
+      if (reglasCategorias[buscar]) {
+
+        ubicaciones.push(
+          ...reglasCategorias[buscar]
+        );
+
+      } else {
+        // SI ES UBICACIÓN DIRECTA
+        ubicaciones.push(buscar);
+
+      }
+
+      // CREAR RESALTADOS
+      ubicaciones.forEach(ubicacion => {
+        const estiba = misEstibas.find(e =>
+          String(e.id)
+            .toUpperCase()
+            .includes(
+              String(ubicacion)
+                .toUpperCase()
+            )
+        );
+        if (!estiba) return;
+
+        let realX =
+          estiba.rotado
+            ? estiba.x_mundo
+            : estiba.x;
+
+        let realY = estiba.y;
+
+        let realZ =
+          estiba.rotado
+            ? (estiba.z + estiba.x)
+            : estiba.z;
+
+        const malla = new THREE.Mesh(
+          geoResaltado,
+          matResaltado.clone()
+        );
+
+        malla.position.set(
+          realX,
+          realY + 0.8,
+          realZ
+        );
+
+        malla.material.color.set(
+          0xff0000
+        );
+
+        if (estiba.rotado) {
+          malla.rotation.y =
+            Math.PI / 2;
+
+        }
+        escena.add(malla);
+        window.resaltadosCategoria.push(malla); // GUARDAR REFERENCIA
+      });
+    });
+
+    // BÚSQUEDA POR CATEGORÍA
+    $('#Categorias_Art').on('change', function () {
+
+      limpiarConsultas('#Categorias_Art');
+
+      let cat = $(this).val()
+        .toUpperCase()
+        .trim();
+      if (!cat || !datosCargados) return;
+
+      // LIMPIAR RESALTADOS ANTES
+      if (window.resaltadosCategoria) {
+        window.resaltadosCategoria.forEach(malla => {
+          escena.remove(malla);
+        });
+      }
+
+      window.resaltadosCategoria = [];
+
+      // MOSTRAR / OCULTAR MESHES
+      if (meshRecepcion) {
+        meshRecepcion.visible = (cat === "RECEPCION");
+      }
+      if (meshTics) {
+        meshTics.visible = (cat === "TICS");
+      }
+      if (meshVidrios) {
+        meshVidrios.visible = (cat === "PISO1");
+      }
+
+      // NORMALIZADOR
+      const normalizar = texto =>
+        String(texto || "")
+          .toUpperCase()
+          .replace(/\s+/g, "")
+          .replace(/_/g, "")
+          .trim();
+
+      // MAPEO VISUAL -> BD
+      let categoriaBusqueda = cat;
+
+      const equivalencias = {
+        "TICS": "CUARTOTISC",
+        "PISO1": "PISO01"
+      };
+
+      if (equivalencias[cat]) {
+        categoriaBusqueda = equivalencias[cat];
+      }
+
+      // FILTRAR BASE
+      const coincidencias = baseDeDatos.filter(f => {
+        const ubi = normalizar(f[5]);
+
+        return ubi.includes(
+          normalizar(categoriaBusqueda)
+        );
+      });
+
+      // MOSTRAR MODAL
+      if (coincidencias.length > 0) {
+        mostrarEnModal(
+          coincidencias,
+          "Categoria: " + cat
+        );
+      } else {
+        mostrarEnModal(
+          null,
+          "Sin resultados para categoria: " + cat
+        );
+      }
+
+      // OBTENER UBICACIONES
+      let ubicaciones = [];
+      if (cat === "TICS" || cat === "PISO1") {
+        ubicaciones = coincidencias.map(f =>
+          String(f[0] || "")
+            .toUpperCase()
+            .trim()
+        );
+
+      } else {
+        Object.keys(reglasCategorias).forEach(nombre => {
+          if (
+            nombre.toUpperCase().includes(cat)
+          ) {
+            ubicaciones.push(
+              ...reglasCategorias[nombre]
+            );
+          }
+        });
+      }
+
+      // RESALTAR ESTIBAS
+      ubicaciones.forEach(ubicacion => {
+        const estibas = misEstibas.filter(e =>
+          String(e.id)
+            .toUpperCase()
+            .includes(
+              String(ubicacion)
+                .toUpperCase()
+            )
+        );
+
+        estibas.forEach(estiba => {
+
+          let realX =
+            estiba.rotado
+              ? estiba.x_mundo
+              : estiba.x;
+
+          let realY = estiba.y;
+
+          let realZ =
+            estiba.rotado
+              ? (estiba.z + estiba.x)
+              : estiba.z;
+
+          const malla = new THREE.Mesh(geoResaltado, matResaltado.clone());
+          malla.position.set(realX, realY + 0.8, realZ);
+
+          malla.material.color.set(0xff0000);
+
+          if (estiba.rotado) {
+            malla.rotation.y = Math.PI / 2;
+          }
+
+          escena.add(malla);
+          window.resaltadosCategoria.push(malla);
+        });
+      });
+    });
+
+    // ─── BÚSQUEDA POR DIVISIÓN DE BODEGA ───
+    $('#Categorias_Ubic').on('change', function () {
+
+      limpiarConsultas('#Categorias_Ubic');
+
+      const cat = $(this).val().trim();
+      if (!cat) return;
+      const prefijos = mapaDivisiones[cat];
+      if (!prefijos) return;
+
+      // VIDRIOS
+      if (cat === "Piso 1 vidrios") {
+        if (meshVidrios) {
+          meshVidrios.visible = true;
+        }
+      } else {
+        if (meshVidrios) {
+          meshVidrios.visible = false;
+        }
+      }
+
+      // RECEPCION
+      if (cat === "Recepcion") {
+        if (meshRecepcion) {
+          meshRecepcion.visible = true;
+        }
+      } else {
+        if (meshRecepcion) {
+          meshRecepcion.visible = false;
+        }
+      }
+
+      // TICS
+      if (cat === "Tics") {
+        if (meshTics) {
+          meshTics.visible = true;
+        }
+      } else {
+        if (meshTics) {
+          meshTics.visible = false;
+        }
+      }
+
+      // LIMPIAR RESALTADOS
+      if (window.resaltadosCategoria) {
+        window.resaltadosCategoria.forEach(malla => {
+          escena.remove(malla);
+        });
+      }
+
+      window.resaltadosCategoria = [];
+      mallaResaltadoActual = null;
+
+      // RESALTAR ESTIBAS
+      const estibas = misEstibas.filter(e => {
+        const id = String(e.id)
+          .toUpperCase()
+          .trim();
+
+        return prefijos.some(p =>
+          id.startsWith(p)
+        );
+      });
+
+      estibas.forEach(estiba => {
+
+        let realX = estiba.rotado
+          ? estiba.x_mundo
+          : estiba.x;
+        let realY = estiba.y;
+        let realZ = estiba.rotado
+          ? (estiba.z + estiba.x)
+          : estiba.z;
+
+        const malla = new THREE.Mesh(
+          geoResaltado,
+          matResaltado.clone()
+        );
+
+        malla.position.set(
+          realX,
+          realY + 0.8,
+          realZ
+        );
+
+        malla.material.color.set(0xff0000);
+        if (estiba.rotado) {
+          malla.rotation.y = Math.PI / 2;
+        }
+        escena.add(malla);
+        window.resaltadosCategoria.push(malla);
+      });
+    });
+
+    // ─── BÚSQUEDA POR SERIAL ─── NÚMERO DE SERIE solo para activos fijos **
+    $('#inputSerial').on('input', function () {
+      limpiarConsultas('#inputSerial');
+
+      const buscar = $(this).val()
+        .trim()
+        .toUpperCase();
+
+      const lista = $('#listaSeriales');
+
+      // MOSTRAR / OCULTAR LISTA
+      if (buscar === "") {
+        lista.hide();
+      } else {
+        lista.show();
+      }
+
+      // LIMPIAR LISTA
+      lista.empty();
+
+      // LIMPIAR RESALTADOS
+      if (window.resaltadosCategoria) {
+        window.resaltadosCategoria.forEach(malla => {
+          escena.remove(malla);
+        });
+      }
+
+      window.resaltadosCategoria = [];
+
+      // INPUT VACÍO
+      if (!datosCargados || buscar === "") {
+        if (mallaResaltadoActual) {
+          escena.remove(mallaResaltadoActual);
+          mallaResaltadoActual = null;
+        }
+        return;
+      }
+
+      // BUSCAR SERIAL
+      const coincidencias = baseDeDatos.filter(f => {
+        const serial = String(f[8] || "")
+          .toUpperCase()
+          .trim();
+
+        return serial.includes(buscar);
+      });
+
+      // MOSTRAR EN MODAL
+      if (coincidencias.length > 0) {
+        mostrarEnModal(
+          coincidencias,
+          "Serial: " + buscar
+        );
+      } else {
+        mostrarEnModal(
+          null,
+          "Sin resultados para serial: " + buscar
+        );
+      }
+
+      // EVITAR REPETIDOS
+      const serialesUnicos = [
+        ...new Set(
+          coincidencias.map(f =>
+            String(f[8] || "").trim()
+          )
+        )
+      ];
+
+      // CREAR CHECKBOXES
+      serialesUnicos.forEach(serial => {
+
+        const item = $(`
+      <label class="itemSerial">
+        <input type="checkbox">
+        <span>${serial}</span>
+      </label>
+    `);
+
+        // EVENTO CLICK
+        item.find('input').on('change', function () {
+
+          // LIMPIAR RESALTADOS
+          if (window.resaltadosCategoria) {
+            window.resaltadosCategoria.forEach(malla => {
+              escena.remove(malla);
+            });
+          }
+
+          window.resaltadosCategoria = [];
+
+          // OBTENER SERIALS SELECCIONADOS
+          const serialesSeleccionados = [];
+
+          $('#listaSeriales input:checked').each(function () {
+            const serial = $(this)
+              .closest('.itemSerial')
+              .find('span')
+              .text()
+              .trim()
+              .toUpperCase();
+
+            serialesSeleccionados.push(serial);
+          });
+
+          // FILTRAR SOLO LOS SELECCIONADOS
+          const resultadosSeleccionados = coincidencias.filter(f => {
+            const serial = String(f[8] || "")
+              .trim()
+              .toUpperCase();
+
+            return serialesSeleccionados.includes(serial);
+          });
+
+          // MOSTRAR EN MODAL
+          if (resultadosSeleccionados.length > 0) {
+            mostrarEnModal(
+              resultadosSeleccionados,
+              "Seriales seleccionados"
+            );
+          } else {
+            mostrarEnModal(
+              null,
+              "Sin seriales seleccionados"
+            );
+          }
+
+          // RESALTAR SOLO SELECCIONADOS
+          resultadosSeleccionados.forEach(fila => {
+
+            const ubicacion = String(fila[5] || "")
+              .toUpperCase()
+              .trim();
+
+            if (!ubicacion) return;
+
+            const estiba = misEstibas.find(e =>
+              String(e.id)
+                .toUpperCase()
+                .includes(ubicacion)
+            );
+
+            if (!estiba) return;
+
+            let realX = estiba.rotado
+              ? estiba.x_mundo
+              : estiba.x;
+
+            let realY = estiba.y;
+
+            let realZ = estiba.rotado
+              ? (estiba.z + estiba.x)
+              : estiba.z;
+
+            const malla = new THREE.Mesh(
+              geoResaltado,
+              matResaltado.clone()
+            );
+
+            malla.position.set(
+              realX,
+              realY + 0.8,
+              realZ
+            );
+
+            // COLOR AZUL
+            malla.material.color.set(0x00aaff);
+
+            if (estiba.rotado) {
+              malla.rotation.y = Math.PI / 2;
+            }
+            escena.add(malla);
+
+            window.resaltadosCategoria.push(malla);
+          });
+        });
+
+        lista.append(item);
+      });
+    });
+
+    // ─── BÚSQUEDA POR NOMBRE ───
+    $('#inputNombre').on('input', function () {
+      limpiarConsultas('#inputNombre');
+      const buscar = $(this).val().trim().toUpperCase();
+      const lista = $('#listaNombres');
+
+      // LIMPIAR LISTA
+      lista.empty();
+
+      // LIMPIAR RESALTADOS
+      if (window.resaltadosCategoria) {
+        window.resaltadosCategoria.forEach(malla => {
+          escena.remove(malla);
+        });
+      }
+      window.resaltadosCategoria = [];
+
+      // INPUT VACÍO
+      if (!datosCargados || buscar === "") {
+        if (mallaResaltadoActual) {
+          escena.remove(mallaResaltadoActual);
+          mallaResaltadoActual = null;
+        }
+        mostrarEnModal(
+          null,
+          "Sin resultados"
+        );
+        return;
+      }
+
+      // BUSCAR NOMBRES
+      const coincidencias = baseDeDatos.filter(f => {
+        const nombre = String(f[4] || "")
+          .toUpperCase()
+          .trim();
+
+        return nombre.includes(buscar);
+      });
+
+      // EVITAR REPETIDOS
+      const nombresUnicos = [
+        ...new Set(
+          coincidencias.map(f =>
+            String(f[4] || "").trim()
+          )
+        )
+      ];
+
+      // CREAR CHECKBOXES
+      nombresUnicos.forEach(nombre => {
+        const item = $(`
+      <label class="itemSerial">
+        <input type="checkbox">
+        <span>${nombre}</span>
+      </label>
+      `);
+
+        // EVENTO CHECKBOX
+        item.find('input').on('change', function () {
+
+          // LIMPIAR RESALTADOS
+          if (window.resaltadosCategoria) {
+            window.resaltadosCategoria.forEach(malla => {
+              escena.remove(malla);
+            });
+          }
+          window.resaltadosCategoria = [];
+
+          // NOMBRES SELECCIONADOS
+          const nombresSeleccionados = [];
+
+          $('#listaNombres input:checked').each(function () {
+            const nombreSeleccionado = $(this)
+              .closest('.itemSerial')
+              .find('span')
+              .text()
+              .trim()
+              .toUpperCase();
+            nombresSeleccionados.push(nombreSeleccionado);
+          });
+
+          // FILTRAR SOLO SELECCIONADOS
+          const resultadosSeleccionados = coincidencias.filter(f => {
+            const nombreFila = String(f[4] || "")
+              .trim()
+              .toUpperCase();
+            return nombresSeleccionados.includes(nombreFila);
+          });
+
+          // MOSTRAR MODAL
+          if (resultadosSeleccionados.length > 0) {
+            mostrarEnModal(resultadosSeleccionados, "Nombres seleccionados");
+          } else {
+            mostrarEnModal(null, "Sin nombres seleccionados");
+          }
+
+          // RESALTAR
+          resultadosSeleccionados.forEach(fila => {
+            const ubicacion = String(fila[5] || "")
+              .toUpperCase()
+              .trim();
+
+            if (!ubicacion) return;
+            const estiba = misEstibas.find(e =>
+              String(e.id)
+                .toUpperCase()
+                .includes(ubicacion)
+            );
+
+            if (!estiba) return;
+
+            let realX = estiba.rotado
+              ? estiba.x_mundo
+              : estiba.x;
+
+            let realY = estiba.y;
+
+            let realZ = estiba.rotado
+              ? (estiba.z + estiba.x)
+              : estiba.z;
+
+            const malla = new THREE.Mesh(
+              geoResaltado,
+              matResaltado.clone()
+            );
+
+            malla.position.set(
+              realX,
+              realY + 0.8,
+              realZ
+            );
+
+            // COLOR VERDE
+            malla.material.color.set(0x00ff88);
+            if (estiba.rotado) {
+              malla.rotation.y = Math.PI / 2;
+            }
+            escena.add(malla);
+            window.resaltadosCategoria.push(malla);
+          });
+        });
+        lista.append(item);
+      });
+      lista.show();
+    });
+
+    // ─── EXCLUSIÓN MUTUA: al enfocar un input, se limpian los otros ───
+    (function () {
+      const inputsExcluyentes = ['#input', '#Categorias_Art', '#Categorias_Ubic', '#inputSerial', '#inputNombre'];
+      inputsExcluyentes.forEach(sel => {
+        $(sel).on('focus', function () {
+          inputsExcluyentes.forEach(other => {
+            if (other !== sel) $(other).val('');
+          });
+        });
+      });
+    })();
+
+    // LIMPIAR OTROS FILTROS
+    function limpiarConsultas(activo) {
+      const campos = [
+        '#input',
+        '#inputSerial',
+        '#inputNombre',
+        '#Categorias_Art',
+        '#Categorias_Ubic'
+      ];
+
+      campos.forEach(campo => {
+        // NO LIMPIAR EL ACTIVO
+        if (campo !== activo) {
+          // INPUTS
+          if ($(campo).is('input')) {
+            $(campo).val('');
+          }
+          // SELECTS
+          if ($(campo).is('select')) {
+            $(campo).prop('selectedIndex', 0);
+          }
+        }
+      });
+      // LIMPIAR LISTAS
+      $('#listaSeriales').empty().hide();
+      $('#listaNombres').empty().hide();
+    }
+
+    // ─── MOSTRAR RESULTADOS EN MODAL ───
+    function mostrarEnModal(datos, titulo) {
+      const tabla = document.querySelector("table");
+      tabla.innerHTML = "";
+
+      if (!datos || datos.length === 0) {
+        tabla.innerHTML = `<tr><td style="text-align:center; padding:2em; color:#999;">${titulo || "Sin resultados"}</td></tr>`;
+        modal.style.display = "flex";
+        return;
+      }
+
+      // --- CABECERA ---
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      const headers = ["Id", "Tipologia", "Codigo", "Fecha/Hora", "Nombre", "Ubicacion", "IMG", "Cantidad", "Serial", "Costo Unitario", "Costo Total"];
+      headers.forEach(g => {
+        const th = document.createElement("th");
+        th.textContent = g;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      tabla.appendChild(thead);
+
+      // --- CUERPO ---
+      const tbody = document.createElement("tbody");
+
+      // --- PIE DE TABLA ---
+      // --- CALCULAR TOTAL COSTO ---
+      const totalCosto = datos.reduce((acc, fila) => {
+
+        // COLUMNA COSTO = índice 10
+        let valor = fila[10];
+
+        // LIMPIAR FORMATO
+        valor = String(valor || "0")
+          .replace(/\$/g, '')
+          .replace(/\./g, '')
+          .replace(/,/g, '')
+          .trim();
+
+        valor = parseFloat(valor) || 0;
+
+        return acc + valor;
+
+      }, 0);
+
+      // --- PIE DE TABLA ---
+      const tfoot = document.createElement("tfoot");
+      const tfoottr = document.createElement("tr");
+      const tfoottd = document.createElement("td");
+
+      // OCUPAR TODAS LAS COLUMNAS
+      tfoottd.colSpan = headers.length;
+
+      tfoottd.innerHTML = `
+  <div style="
+    display:flex;
+    justify-content:flex-end;
+    font-size:18px;
+    font-weight:bold;
+    color:#ffffff;
+  ">
+    Total Costo: $ ${totalCosto.toLocaleString('es-CO')}
+  </div>
+`;
+
+      tfoottr.appendChild(tfoottd);
+      tfoot.appendChild(tfoottr);
+
+
+      datos.forEach(fila => {
+        const tr = document.createElement("tr");
+
+        // Usamos el índice (i) para saber en qué columna estamos
+        fila.forEach((valor, i) => {
+          const td = document.createElement("td");
+
+          // Columna 6 es "IMG" (empezando desde 0 es el índice 6)
+          if (i === 6 && valor && valor.toString().startsWith('http')) {
+            const img = document.createElement("img");
+            img.src = valor;
+            img.alt = "Ver";
+            img.style.width = "50px";
+            img.style.borderRadius = "4px";
+            img.style.cursor = "pointer";
+
+            // ABRIR IMAGEN
+            img.onclick = () => window.open(valor, '_blank');
+            // SI FALLA LA IMAGEN
+            img.onerror = function () {
+              const link = document.createElement("a");
+              link.href = valor;
+              link.target = "_blank";
+              link.textContent = "Ver";
+              this.replaceWith(link);
+            };
+            td.appendChild(img);
+          } else {
+
+            td.textContent = valor;
+          }
+
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tabla.appendChild(tbody);
+      tabla.appendChild(tfoot);
+
+      modal.style.display = "flex";
+    }
+
+    // ─── POBLAR CATEGORÍAS DESDE DATOS ───
+    function poblarCategorias() {
+      const cats = new Set();
+
+      Object.keys(reglasCategorias).forEach(nombre => {
+        let categoria = nombre.toUpperCase().trim();
+        cats.add(categoria);
+      });
+      cats.add("PISO1");
+      cats.add("RECEPCION");
+      cats.add("TICS");
+
+      const selectArt = document.getElementById('Categorias_Art');
+      selectArt.innerHTML = '<option value="">Seleccionar</option>';
+      [...cats].sort().forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        selectArt.appendChild(opt);
+      });
+
+      // ─── Categorias_Ubic: divisiones de la bodega ───
+      const divisionesBodega = [
+        "Rak1 (pendiente por verificar)",
+        "Rak2 (dotacion)",
+        "Rak3 (microbodega)",
+        "Rak4 (desmontes buses)",
+        "Rak5 (desmonte estacion)",
+        "Rak6 (bajas)",
+        "Rak7,8,9,10 (macrobodega)",
+        "Piso 1 vidrios",
+        "Recepcion",
+        "Tics"
+      ];
+
+      const selectUbic = document.getElementById('Categorias_Ubic');
+      selectUbic.innerHTML = '<option value="">Selecciona division</option>';
+      divisionesBodega.forEach(nombre => {
+        const opt = document.createElement("option");
+        opt.value = nombre;
+        opt.textContent = nombre;
+        selectUbic.appendChild(opt);
+      });
+    }
+
+    // //////Inventarios /
+    const matPosteAzul = new THREE.MeshStandardMaterial({
+      color: 0x0055a4,
+      roughness: 0.5,
+      metalness: 0.6
+    });
+
+    // Naranja industrial para las vigas (largueros)
+    const matVigaNaranja = new THREE.MeshStandardMaterial({
+      color: 0xff6600,
+      roughness: 0.4,
+      metalness: 0.5
+    });
+
+    function setShadows(obj) {
+      obj.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    }
+
+    // Geometrías compartidas de racks (2.4×5×1)
+    const _rackPostGeo = new THREE.BoxGeometry(0.1, 5, 0.1);
+    const _rackDiagGeo = new THREE.BoxGeometry(0.02, 0.04, 1.4);
+    const _rackBeamGeo = new THREE.BoxGeometry(2.4, 0.15, 0.06);
+
+    function crearFilaRacksInteractiva(width, height, depth, configuracionNiveles) {
+      const grupoFila = new THREE.Group();
+      const numCuerpos = configuracionNiveles.length;
+      const postGeo = _rackPostGeo, diagGeo = _rackDiagGeo, beamGeo = _rackBeamGeo;
+      const posts = [], diags = [], beams = [];
+      const numDiagonales = Math.floor(height / 1.5);
+
+      for (let i = 0; i <= numCuerpos; i++) {
+        const x = i * width;
+        posts.push({ x, y: height / 2, z: -depth / 2 });
+        posts.push({ x, y: height / 2, z: depth / 2 });
+        for (let j = 0; j < numDiagonales; j++) {
+          diags.push({ x, y: j * 1.5 + 0.75, z: 0, rx: j % 2 === 0 ? Math.PI / 4 : -Math.PI / 4 });
+        }
+      }
+
+      configuracionNiveles.forEach((nivelesDelCuerpo, index) => {
+        const xCentro = index * width + width / 2;
+        nivelesDelCuerpo.forEach((alturaNivel) => {
+          beams.push({ x: xCentro, y: alturaNivel, z: depth / 2 });
+          beams.push({ x: xCentro, y: alturaNivel, z: -depth / 2 });
+        });
+      });
+
+      const dummy = new THREE.Object3D();
+      function addInstanced(geo, mat, transforms) {
+        const mesh = new THREE.InstancedMesh(geo, mat, transforms.length);
+        transforms.forEach((t, i) => {
+          dummy.position.set(t.x, t.y, t.z);
+          dummy.rotation.set(t.rx || 0, t.ry || 0, t.rz || 0);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(i, dummy.matrix);
+        });
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        grupoFila.add(mesh);
+      }
+
+      addInstanced(postGeo, matPosteAzul, posts);
+      addInstanced(diagGeo, matPosteAzul, diags);
+      addInstanced(beamGeo, matVigaNaranja, beams);
+
+      return grupoFila;
+    }
+
+    // Matriz Rak1
+    const MatrizRak1 = [
+
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [2.4, 3.6, 4.8],
+      [2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak1);
+    filaPersonalizada.position.set(0.91, 0, -0.75); // Ubicar después de Datatools
+    escena.add(filaPersonalizada);
+
+    // Matriz Rak2
+    const MatrizRak2 = [
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada2 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak2);
+    filaPersonalizada2.position.set(0.91, 0, -4.25); // Ubicar después de Datatools
+    escena.add(filaPersonalizada2);
+
+    // Matriz Rak3
+    const MatrizRak3 = [
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [0.7, 1.2, 2.4, 3.6, 4.8],
+      [4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada3 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak3);
+    filaPersonalizada3.position.set(0.91, 0, -5.5); // Ubicar después de Datatools
+    escena.add(filaPersonalizada3);
+
+    // Matriz Rak4
+    const MatrizRak4 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada4 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak4);
+    filaPersonalizada4.position.set(0.91, 0, -9.6); // Ubicar después de Datatools
+    escena.add(filaPersonalizada4);
+
+    // Matriz Rak5
+    const MatrizRak5 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+
+    ];
+
+    const filaPersonalizada5 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak5);
+    filaPersonalizada5.position.set(0.91, 0, -11); // Ubicar después de Datatools
+    escena.add(filaPersonalizada5);
+
+    // Matriz Rak6
+    const MatrizRak6 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.6, 3.6, 4.8],
+      [4.8],
+      [2.4, 3.6, 4.8],
+      [2.4, 4.8],
+      [2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada6 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak6);
+    filaPersonalizada6.position.set(0.41, 0, -14.8); // Ubicar después de Datatools
+    escena.add(filaPersonalizada6);
+
+    // Matriz Rak7
+    const MatrizRak7 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada7 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak7);
+    filaPersonalizada7.position.set(12.6, 0, -16.4);
+    filaPersonalizada7.rotation.y = Math.PI / 2;
+    escena.add(filaPersonalizada7);
+
+    // Matriz Rak8
+    const MatrizRak8 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada8 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak8);
+    filaPersonalizada8.position.set(16.4, 0, -19); // Ubicar después de Datatools
+    filaPersonalizada8.rotation.y = Math.PI / 2;
+    escena.add(filaPersonalizada8);
+
+    // Matriz Rak9
+    const MatrizRak9 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada9 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak9);
+    filaPersonalizada9.position.set(17.6, 0, -19); // Ubicar después de Datatools
+    filaPersonalizada9.rotation.y = Math.PI / 2;
+    escena.add(filaPersonalizada9);
+
+    // Matriz Rak10
+    const MatrizRak10 = [
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+      [1.2, 2.4, 3.6, 4.8],
+    ];
+
+    const filaPersonalizada10 = crearFilaRacksInteractiva(2.4, 5, 1, MatrizRak10);
+    filaPersonalizada10.position.set(21.6, 0, -16.4);
+    filaPersonalizada10.rotation.y = Math.PI / 2;
+    escena.add(filaPersonalizada10);
+
+
+    /* Crear digito*/
+    function crearnumeros(link, x, y, z, rot) {
+      const material = new THREE.MeshBasicMaterial({
+        map: textureLoader.load(link) // Reemplaza con la ruta de tu imagen
+      });
+      const geometry = new THREE.BoxGeometry(1.2, 1.2, 0.1);
+      const cubee = new THREE.Mesh(geometry, material);
+
+      cubee.position.set(x, y, z);
+      cubee.rotation.y = rot;
+      escena.add(cubee);
+    }
+
+    crearnumeros("https://i.ibb.co/QF92Rc6Z/image.png", 0.9, 5, -0.8, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/QF4Z1dq9/image.png", 0.9, 5, -4.3, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/YTfJHSJm/image.png", 0.9, 5, -5.6, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/TBvSYHfR/image.png", 0.9, 5, -9.6, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/Hf4yTkSq/image.png", 0.9, 5, -11, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/zVPkdM1Z/image.png", 0.4, 5, -14.8, Math.PI / 2);
+    crearnumeros("https://i.ibb.co/0jSXr8Q7/image.png", 14.5, 5, -23.8, 0);
+    crearnumeros("https://i.ibb.co/7d78HRy2/image.png", 16.4, 5, -18.8, 0);
+    crearnumeros("https://i.ibb.co/nsZX1w5Q/image.png", 17.7, 5, -18.8, 0);
+    crearnumeros("https://i.ibb.co/N2gMBbgR/image.png", 20, 5, -23.8, 0);
+
+    /* Crear carteles */
+    function crearcarteles(link, alt, lar, anc, x, y, z, rot) {
+      const textura = textureLoader.load(link);
+      textura.anisotropy = renderer.capabilities.getMaxAnisotropy();// MEJORAR CALIDAD
+
+      const material = new THREE.MeshBasicMaterial({
+        map: textura,
+        transparent: true,
+        alphaTest: 0.5,
+        side: THREE.DoubleSide // EVITA BORDES OSCUROS
+      });
+
+      // CAMBIAR BOX POR PLANE
+      const geometry = new THREE.PlaneGeometry(lar, alt);
+      const cubee = new THREE.Mesh(geometry, material);
+      cubee.position.set(x, y, z);
+      cubee.rotation.y = rot;
+      escena.add(cubee);
+    }
+
+    crearcarteles("https://i.ibb.co/k2RSW5ys/Captura-de-pantalla-2026-05-21-121022.png", 0.5, 0.5, 0.05, 15, 2.2, -6, Math.PI / 1); //peligro carga suspendida
+    crearcarteles("https://i.ibb.co/HLFgxXfv/image.png", 1, 2, 0.05, 16, 4.8, -14.25, THREE.MathUtils.degToRad(1)); //macrobodega
+    crearcarteles("https://i.ibb.co/hxhpmF1d/image.png", 1, 2, 0.05, 3.3, 4.8, -7, Math.PI / 2); //Microbodega
+    crearcarteles("https://i.ibb.co/LzPPx3vJ/image.png", 1, 1, 0.05, 13, 2.2, -11, Math.PI / 2); //ACTIVOS FIJOS
+    crearcarteles("https://i.ibb.co/LzPPx3vJ/image.png", 1, 1, 0.05, 15.2, 2.2, -11, -Math.PI / 2); //ACTIVOS FIJOS
+    crearcarteles("https://i.ibb.co/LzPPx3vJ/image.png", 1, 1, 0.05, 14.9, 2.2, -14.8, Math.PI / 2); //ACTIVOS FIJOS
+    crearcarteles("https://i.ibb.co/jZJVPRHr/image.png", 0.8, 0.8, 0.08, 14, 2.2, -23.8, THREE.MathUtils.degToRad(1)); //Inventario inventories
+    crearcarteles("https://i.ibb.co/3mqftYXC/image.png", 0.6, 0.8, 0.08, 15, 2.2, -23.8, THREE.MathUtils.degToRad(1)); //usar cascos
+    crearcarteles("https://i.ibb.co/jZJVPRHr/image.png", 0.8, 0.8, 0.08, 19, 2.2, -23.8, THREE.MathUtils.degToRad(1)); //Inventario inventories
+    crearcarteles("https://i.ibb.co/jZJVPRHr/image.png", 1, 1, 0.05, 13, 2.2, -5, Math.PI / 2); //Inventario inventories
+    crearcarteles("https://i.ibb.co/v68cZGv3/image.png", 0.4, 0.8, 0.08, 20, 2.2, -23.8, THREE.MathUtils.degToRad(1)); //Zona de parqueo de apilador electrico
+    crearcarteles("https://i.ibb.co/jZJVPRHr/image.png", 1, 1, 0.05, 0.83, 3, -3.6, -Math.PI / 2); //Inventario inventories
+    crearcarteles("https://i.ibb.co/Zp5YrqX9/image.png", 0.5, 1, 0.05, 0.83, 3.7, -3.6, -Math.PI / 2); //Dotacion
+    crearcarteles("https://i.ibb.co/Swj8yjtF/image.png", 0.5, 1, 0.05, 0.83, 2.7, -1.6, Math.PI / 1); //Picking
+
+
+
+    // MARCAS EN PISO
+    function marcapiso(link, alt, lar, anc, x, y, z, rot) {
+      const textura = textureLoader.load(link);
+
+      textura.colorSpace = THREE.SRGBColorSpace;
+      textura.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      textura.minFilter = THREE.LinearMipmapLinearFilter;
+      textura.magFilter = THREE.LinearFilter;
+
+      const material = new THREE.MeshBasicMaterial({
+        map: textura,
+        transparent: true,
+        alphaTest: 0.5,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+
+        // AMARILLO INDUSTRIAL FUERTE
+        color: 0xffd800
+      });
+
+      const geometry = new THREE.PlaneGeometry(lar, alt);
+      const marcapiso = new THREE.Mesh(geometry, material);
+      marcapiso.position.set(x, y, z);
+      marcapiso.rotation.x = Math.PI / 2;
+      marcapiso.rotation.z = rot;
+
+      escena.add(marcapiso);
+    }
+
+    //espacio
+    marcapiso("https://i.ibb.co/jkvcVTfD/image.png", 3.2, 2.6, 0.05, 14.05, 0.201, -4.9, Math.PI / 1);
+    marcapiso("https://i.ibb.co/jkvcVTfD/image.png", 3.2, 2.6, 0.05, 14.05, 0.201, -10.3, Math.PI / 1);
+    marcapiso("https://i.ibb.co/jkvcVTfD/image.png", 1.5, 2.6, 0.05, 15.9, 0.201, -14.7, Math.PI / 1);
+
+    //Pasos 
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 26, 2.8, 0.05, 12.8, 0.201, -12.9, Math.PI / 2);
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 28, 3, 0.05, 13.5, 0.201, -7.6, Math.PI / 2);
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 28, 2.6, 0.05, 13.5, 0.201, -2.45, Math.PI / 2);
+
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 7.8, 1.6, 0.05, 12.5, 0.201, -20, Math.PI / 1);
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 7.8, 1.6, 0.05, 21.6, 0.201, -20, Math.PI / 1);
+    marcapiso("https://i.ibb.co/SDVr8mDQ/image.png", 5, 3.1, 0.05, 17, 0.201, -21.3, Math.PI / 1);
+
+    //iconos de paso
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 22.9, 0.201, -13.7, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 12.9, 0.201, -13.7, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 2.9, 0.201, -13.7, Math.PI / 1);
+
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 22.9, 0.201, -8.5, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 12.9, 0.201, -8.5, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 2.9, 0.201, -8.5, Math.PI / 1);
+
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 22.9, 0.201, -3.2, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 12.9, 0.201, -3.2, Math.PI / 1);
+    marcapiso("https://i.ibb.co/W49LQGCF/image.png", 0.5, 1, 0.05, 2.9, 0.201, -3.2, Math.PI / 1);
+
+    //linea sola
+    marcapiso("https://i.ibb.co/1tJtgd5Y/image.png", 8, 0.7, 0.05, 17, 0.201, -16.27, Math.PI / 2);
+    marcapiso("https://i.ibb.co/1tJtgd5Y/image.png", 8, 0.7, 0.05, 17, 0.201, -23.67, Math.PI / 2);
+
+    // montacarga
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 18.9, 0.201, -12.7, Math.PI / 1);
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 8.9, 0.201, -12.7, Math.PI / 1);
+
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 18.9, 0.201, -7.3, Math.PI / 1);
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 8.9, 0.201, -7.3, Math.PI / 1);
+
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 18.9, 0.201, -2.2, Math.PI / 1);
+    marcapiso("https://i.ibb.co/kgsK9t10/image.png", 0.5, 1, 0.05, 8.9, 0.201, -2.2, Math.PI / 1);
+
+
+    //colubnas
+    function colubnas(x, y, z, rot) {
+
+      const materialColumna = new THREE.MeshStandardMaterial({
+        color: 0x8a8a8a,
+        roughness: 0.9,
+        metalness: 0.05
+      });
+
+      const geocolub = new THREE.BoxGeometry(0.5, 6, 0.2);
+      const colub = new THREE.Mesh(geocolub, materialColumna);
+      colub.position.set(x, y, z);
+      colub.rotation.y = rot;
+
+      escena.add(colub);
+    }
+
+    //colubnas pared1
+    colubnas(28.5, 3.2, -0.1, 0);
+    colubnas(25, 3.2, -0.1, 0);
+    colubnas(20, 3.2, -0.1, 0);
+    colubnas(15, 3.2, -0.1, 0);
+    colubnas(10, 3.2, -0.1, 0);
+    colubnas(5, 3.2, -0.1, 0);
+    colubnas(1, 3.2, -0.1, 0);
+    //colubnas pared2
+    colubnas(21.8, 3.2, -23.8, 0);
+    colubnas(18.2, 3.2, -23.8, 0);
+    colubnas(15.4, 3.2, -23.8, 0);
+    colubnas(12.2, 3.2, -23.8, 0);
+
+    // ESC: 1 vez cierra modal/sidebar, 3 veces también quita remarcados
+    let escCount = 0;
+    let escTimer = null;
+    window.addEventListener('keydown', function (event) {
+      if (event.key === "Escape") {
+        modal.style.display = "none";
+        cerrarSidebar();
+        escCount++;
+        if (escCount >= 3) {
+          escCount = 0;
+          if (mallaResaltadoActual) {
+            escena.remove(mallaResaltadoActual);
+            mallaResaltadoActual = null;
+          }
+          if (window.resaltadosCategoria) {
+            window.resaltadosCategoria.forEach(malla => escena.remove(malla));
+          }
+          window.resaltadosCategoria = [];
+        }
+        clearTimeout(escTimer);
+        escTimer = setTimeout(() => { escCount = 0; }, 1000);
+      }
+    });
+    // BTN Control
+    window.addEventListener('keydown', function (event) {
+      if (event.key === 'Control') {
+        console.log("Control");
+        camara.position.y -= 0.1;
+
+        estadoFPS.pos.copy(camara.position);
+      }
+    });
+
+    // BTN shift
+    window.addEventListener('keydown', function (event) {
+      if (event.key === 'Shift') {
+        camara.position.y += 0.1;
+
+        estadoFPS.pos.copy(camara.position);
+      }
+    });
+
+    // ANIMACION
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(reloj.getDelta(), 0.05);
+
+      if (modoFPS && controlActivo) {
+        const rapidez = 3.0;
+        direccion.set(0, 0, 0);
+        if (teclas['w']) direccion.z -= 1;
+        if (teclas['s']) direccion.z += 1;
+        if (teclas['a']) direccion.x -= 1;
+        if (teclas['d']) direccion.x += 1;
+        if (direccion.length() > 0) {
+          direccion.normalize();
+          const adelante = new THREE.Vector3();
+          camara.getWorldDirection(adelante);
+          adelante.y = 0; adelante.normalize();
+          const derecha = new THREE.Vector3();
+          derecha.crossVectors(adelante, camara.up).normalize();
+          const mover = new THREE.Vector3();
+          mover.addScaledVector(adelante, -direccion.z * rapidez * delta);
+          mover.addScaledVector(derecha, direccion.x * rapidez * delta);
+          camara.position.add(mover);
+        }
+        // Mirar con flechas
+        const velAng = 2.0;
+        if (teclas['arrowleft']) euler.y += velAng * delta;
+        if (teclas['arrowright']) euler.y -= velAng * delta;
+        if (teclas['arrowup']) euler.x += velAng * delta;
+        if (teclas['arrowdown']) euler.x -= velAng * delta;
+        if (teclas['arrowleft'] || teclas['arrowright'] || teclas['arrowup'] || teclas['arrowdown']) {
+          euler.x = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, euler.x));
+          camara.quaternion.setFromEuler(euler);
+        }
+      }
+
+      // Adaptativo: desactiva bloom si el FPS es muy bajo
+      fpsContador++;
+      fpsTiempo += delta;
+      if (fpsTiempo > 2) {
+        const fps = fpsContador / fpsTiempo;
+        if (fps < 25 && bloomActivo) { bloomActivo = false; bloomPass.enabled = false; }
+        if (fps > 40 && !bloomActivo) { bloomActivo = true; bloomPass.enabled = true; }
+        fpsContador = 0; fpsTiempo = 0;
+      }
+
+      // Polvo flotante (cada ~8 frames)
+      contadorPolvo++; if (contadorPolvo % 8 === 0) {
+        const t = Date.now() * 0.0005;
+        const pos = dustParticles.geometry.attributes.position.array;
+        for (let i = 0; i < dustCount; i++) {
+          pos[i * 3 + 1] = dustBaseY[i] + Math.sin(t + i) * 0.4;
+        }
+        dustParticles.geometry.attributes.position.needsUpdate = true;
+      }
+      if (!modoFPS) orbitControls.update();
+      composer.render();
+    }
+    animate();
+
+    window.addEventListener("resize", () => {
+      camara.aspect = window.innerWidth / window.innerHeight;
+      camara.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const loader = new GLTFLoader();
+
+    //Extintor
+    loader.load(
+      "https://raw.githubusercontent.com/practicanteinventarios-design/Bodega3d/main/extintor.glb",
+
+      (gltf) => {
+
+        const extintor = gltf.scene;
+
+        // Posición
+        extintor.position.set(5, 10, -3);
+
+        // Escala
+        extintor.scale.set(1, 1, 1);
+
+        // Rotación
+        extintor.rotation.y = Math.PI / 2;
+
+        escena.add(extintor);
+      }
+    );
+
+    //montacargas
+    loader.load(
+      "https://raw.githubusercontent.com/practicanteinventarios-design/Bodega3d/main/montacarga.glb",
+
+      (gltf) => {
+
+        const montacarga = gltf.scene;
+
+        // Posición
+        montacarga.position.set(5, 1.5, -3);
+
+        // Escala
+        montacarga.scale.set(3, 3, 3);
+
+        // Rotación
+        montacarga.rotation.y = Math.PI / 2;
+
+        escena.add(montacarga);
+      }
+    );
+
+    //camara
+    loader.load(
+      "https://raw.githubusercontent.com/practicanteinventarios-design/Bodega3d/main/camara.glb",
+
+      (gltf) => {
+        const camara = gltf.scene;
+
+        // Posición
+        camara.position.set(28.1, 3, -3);
+        camara.rotation.y = Math.PI / 2;
+        // Escala
+        camara.scale.set(0.22, 0.22, 0.22);
+
+        // Rotación
+        camara.rotation.y = -Math.PI / 2;
+
+        escena.add(camara);
+      }
+    );
+
+
+  </script>
+</body>
+
+</html>
